@@ -20,3 +20,6 @@ ai
 # Vagrant
 .vagrant
 Vagrantfile
+
+# Private
+docker-compose-contabo01.yml
