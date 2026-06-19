@@ -61,6 +61,17 @@ export async function validate({ core, base, slots, options }) {
   return res.json()
 }
 
+// ───── Solve (slot placement) ─────
+
+export async function solve({ core, base, modules, max_solutions, options }) {
+  const res = await fetch(`${BASE}/solve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ core, base, modules, max_solutions, options }),
+  })
+  return res.json()
+}
+
 // ───── Unified browse / detail helpers ─────
 
 /**

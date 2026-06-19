@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { fetchBases, fetchBase, fetchCores, fetchModules, validate } from '../api'
+import { fetchBases, fetchBase, fetchCores, fetchModules, validate, solve } from '../api'
 import FunctionTable from './FunctionTable'
 
 export default function CombineTool({ initialConfig, onConfigConsumed }) {
@@ -15,6 +15,12 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
   // Monotonic id so a slow validate() response from a previous base can't
   // overwrite the cleared state.
   const validateReqId = useRef(0)
+  // Solve (slot-placement) chooser state.
+  const [solutions, setSolutions] = useState(null)   // /solve response, or null
+  const [solving, setSolving] = useState(false)
+  const [solveError, setSolveError] = useState(null)
+  const [expandedRank, setExpandedRank] = useState(1)
+  const solveReqId = useRef(0)
 
   // Initial: load the catalog once.
   useEffect(() => {
@@ -39,6 +45,8 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
     setResult(null)
     setAssignments({})
     setBlocked(new Set())
+    setSolutions(null)
+    setSolveError(null)
     if (!selectedBase) return
     fetchBase(selectedBase).then(setBaseInfo)
   }, [selectedBase])
@@ -98,6 +106,8 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
     for (const b of blockedSet) next[b] = ''
     setAssignments(next)
     setBlocked(blockedSet)
+    setSolutions(null)        // a manual edit invalidates any pending proposal
+    setSolveError(null)
   }
 
   // Auto-validate whenever assignments change.
@@ -137,6 +147,71 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
     })
   }, [baseInfo, selectedBase, assignments, blocked])
 
+  // --- Solve (slot placement) ---------------------------------------------
+  // Split current assignments into the Core + the non-CORE modules, the same
+  // rule the auto-validate effect uses.
+  const splitAssignments = () => {
+    const slotInfo = (baseInfo && baseInfo.slot_info) || {}
+    let coreId = null
+    const modules = []
+    for (const [slotName, moduleId] of Object.entries(assignments)) {
+      if (!moduleId) continue
+      if (slotInfo[slotName]?.accepts_type === 'WisCore') coreId = moduleId
+      else modules.push(moduleId)
+    }
+    return { coreId, modules }
+  }
+
+  const baseHasCoreSlot = !!(baseInfo && baseInfo.slots.includes('CORE'))
+  const { coreId: solveCore, modules: solveModules } =
+    baseInfo ? splitAssignments() : { coreId: null, modules: [] }
+
+  let solveDisabledReason = ''
+  if (!baseInfo) solveDisabledReason = 'Select a base board first.'
+  else if (baseHasCoreSlot && !solveCore) solveDisabledReason = 'Choose a Core module first.'
+  else if (solveModules.length === 0) solveDisabledReason = 'Add at least one module to place.'
+  const canSolve = !solveDisabledReason && !solving
+
+  const handleSolve = () => {
+    if (!canSolve) return
+    setSolving(true)
+    setSolveError(null)
+    const reqId = ++solveReqId.current
+    solve({ core: solveCore, base: baseInfo.id, modules: solveModules, max_solutions: 3 })
+      .then(res => {
+        if (reqId !== solveReqId.current) return
+        if (res && res.error) {
+          setSolveError(res.error.message || 'Solve failed.')
+          setSolutions(null)
+        } else {
+          setSolutions(res)
+          setExpandedRank(1)
+        }
+      })
+      .catch(() => { if (reqId === solveReqId.current) setSolveError('Solve request failed.') })
+      .finally(() => { if (reqId === solveReqId.current) setSolving(false) })
+  }
+
+  // Apply a chosen solution: rebuild assignments from its slots, keeping the
+  // user's Core, then let the existing auto-validate refresh the result table.
+  // Reuses the same assignment + computeBlocked path as the #combine deep-link.
+  const applySolution = (sol) => {
+    const slotInfo = baseInfo.slot_info || {}
+    const next = {}
+    for (const name of baseInfo.slots) {
+      next[name] = (slotInfo[name]?.accepts_type === 'WisCore' && assignments[name])
+        ? assignments[name]   // keep the chosen Core
+        : ''
+    }
+    for (const { slot, module } of sol.slots) next[slot] = module
+    const blockedSet = computeBlocked(next, baseInfo, allModules)
+    for (const b of blockedSet) next[b] = ''
+    setAssignments(next)
+    setBlocked(blockedSet)
+    setSolutions(null)
+    setSolveError(null)
+  }
+
   return (
     <div>
       <div className="combine-layout">
@@ -174,6 +249,95 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
             )
           })}
 
+          {baseInfo && (
+            <button
+              type="button"
+              className="solve-btn"
+              onClick={handleSolve}
+              disabled={!canSolve}
+              title={solveDisabledReason || 'Suggest slot placements for the selected modules'}
+            >
+              {solving ? 'Solving…' : 'Solve'}
+            </button>
+          )}
+
+          {solveError && <div className="solve-error">{solveError}</div>}
+
+          {solutions && (
+            <div className="solve-results">
+              <div className="solve-results-head">
+                <span>{solutions.solution_count} solution{solutions.solution_count === 1 ? '' : 's'}</span>
+                <button
+                  type="button"
+                  className="solve-dismiss"
+                  onClick={() => setSolutions(null)}
+                  title="Keep current layout"
+                >✕</button>
+              </div>
+              {solutions.truncated && (
+                <div className="solve-note">Best effort — search space capped.</div>
+              )}
+              {solutions.solution_count === 0 && (
+                <div className="solve-note">No modules could be placed.</div>
+              )}
+              {solutions.solutions.map(sol => {
+                const open = expandedRank === sol.rank
+                const status = sol.error_count
+                  ? { cls: 'err', label: `✗${sol.error_count}` }
+                  : sol.warning_count
+                    ? { cls: 'warn', label: `⚠${sol.warning_count}` }
+                    : { cls: 'ok', label: '✓' }
+                return (
+                  <div key={sol.rank} className={`solve-option${sol.rank === 1 ? ' best' : ''}`}>
+                    <button
+                      type="button"
+                      className="solve-summary"
+                      aria-expanded={open}
+                      onClick={() => setExpandedRank(open ? -1 : sol.rank)}
+                    >
+                      <span className="solve-rank">{sol.rank === 1 ? '★ 1' : sol.rank}</span>
+                      <span className={`solve-status ${status.cls}`}>{status.label}</span>
+                      <span className="solve-top" title="sensors on the top layer">▲{sol.sensors_on_top}</span>
+                      <span className="solve-count">{sol.slots.length} slot{sol.slots.length === 1 ? '' : 's'}</span>
+                      {sol.unplaced.length > 0 && (
+                        <span className="solve-unplaced-count" title="unplaced modules">·{sol.unplaced.length}✗</span>
+                      )}
+                      <span className="solve-chevron">{open ? '▾' : '▸'}</span>
+                    </button>
+                    {open && (
+                      <div className="solve-detail">
+                        <div className="solve-placement">
+                          {sol.slots.map(s => (
+                            <div key={s.slot} className="solve-place-row">
+                              <span className="solve-slot">{s.slot}</span>
+                              <span className="solve-mod">{s.module}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {sol.conflicts.map((c, i) => (
+                          <div key={`e${i}`} className="solve-reason err">✗ {c.message}</div>
+                        ))}
+                        {sol.warnings.map((w, i) => (
+                          <div key={`w${i}`} className="solve-reason warn">⚠ {w.message}</div>
+                        ))}
+                        {sol.unplaced.map((u, i) => (
+                          <div key={`u${i}`} className="solve-reason unplaced">
+                            ! {u.module} — {unplacedReason(u.reason)}
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          className="solve-apply"
+                          onClick={() => applySolution(sol)}
+                        >Use this layout</button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
         </div>
 
         <div>
@@ -204,4 +368,14 @@ function computeBlocked(assignments, baseInfo, allModules) {
     }
   }
   return blockedSet
+}
+
+/** Friendly text for a /solve `unplaced[].reason` code. */
+function unplacedReason(code) {
+  switch (code) {
+    case 'unknown_module': return 'not in the WisMAP catalog'
+    case 'incompatible_with_base': return 'no compatible slot on this base'
+    case 'no_free_slot': return 'no free slot left'
+    default: return code
+  }
 }
