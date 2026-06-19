@@ -29,11 +29,13 @@ rak19009:
       10: IO4
       12: IO3
       24: UART1_RX
+      layer: bottom
     SENSOR_B:
       1: UART1_TX
       10: IO6
       12: IO5
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board
   - compact

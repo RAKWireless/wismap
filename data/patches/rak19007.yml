@@ -38,10 +38,12 @@ rak19007:
       1: UART1_TX
       24: UART1_RX
     SENSOR_B: null
-    SENSOR_C: null
+    SENSOR_C:
+      layer: bottom
     SENSOR_D:
       double: true
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board

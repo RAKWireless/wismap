@@ -111,9 +111,11 @@ Endpoints:
 | `GET` | `/api/v1/bases` · `/bases/:id` | List / get a Base |
 | `GET` | `/api/v1/modules` · `/modules/:id` | List / get a non-Core, non-Base module |
 | `POST` | `/api/v1/validate` | Validate a `{core, base, slots[]}` configuration; returns structured conflicts and a resolved pin map |
+| `POST` | `/api/v1/solve` | Solve which slot each requested module goes in; returns up to `max_solutions` ranked placements (no pin map — call `/validate` on the chosen one) |
 
-Test fixtures (canonical valid + invalid validate requests with expected
-responses) live in `tests/fixtures/validate/` for downstream-consumer CI.
+Test fixtures — canonical request/response pairs for `/api/v1/validate` and
+`/api/v1/solve` — live in `tests/fixtures/{validate,solve}/` for
+downstream-consumer CI.
 
 ## Environment variables
 

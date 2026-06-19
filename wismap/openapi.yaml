@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: WisMAP API
-  version: "0.4.0"      # MUST match wismap.__version__ — checked by tests/check_openapi_coverage.py
+  version: "0.5.0"      # MUST match wismap.__version__ — checked by tests/check_openapi_coverage.py
   description: |
     Versioned JSON API for the RAKwireless WisBlock pin-mapping tool.
 
@@ -88,7 +88,7 @@ paths:
               schema: { $ref: "#/components/schemas/HealthResponse" }
               example:
                 status: ok
-                version: "0.4.0"
+                version: "0.5.0"
 
   # ─── Cores ──────────────────────────────────────────────────────────────
 
@@ -216,9 +216,10 @@ paths:
                   - { bus: I2C1, slots: [CORE, IO_A, SENSOR_A, SENSOR_B, SENSOR_C, SENSOR_D] }
                 datasheet_url: https://docs.rakwireless.com/product-categories/wisblock/rak19007/overview/
                 slot_info:
-                  CORE: { double: false, double_blocks: null, accepts_type: WisCore }
-                  IO_A: { double: false, double_blocks: null, accepts_type: WisIO }
-                  SENSOR_A: { double: true, double_blocks: SENSOR_B, accepts_type: WisSensor }
+                  CORE: { double: false, double_blocks: null, accepts_type: WisCore, layer: top }
+                  IO_A: { double: false, double_blocks: null, accepts_type: WisIO, layer: top }
+                  SENSOR_A: { double: true, double_blocks: SENSOR_B, accepts_type: WisSensor, layer: top }
+                  SENSOR_C: { double: false, double_blocks: null, accepts_type: WisSensor, layer: bottom }
                 notes:
                   - "Accepts long sensor on SENSOR_A slot but blocking SENSOR_B slot"
         "404":
@@ -450,6 +451,85 @@ paths:
                 error:
                   code: duplicate_slot
                   message: "Slot 'SENSOR_A' appears more than once."
+
+  /api/v1/solve:
+    post:
+      operationId: solve
+      summary: Solve module placement (which slot each module goes in)
+      tags: [Validation]
+      description: |
+        Given a `core` + `base` + a flat list of desired `modules`, return up to
+        `max_solutions` (default 3, max 5) ranked slot assignments. Answers
+        *where modules go* — placements + scores only, **no `resolved` pin map**.
+        The client calls `POST /api/v1/validate` on the layout it picks to get
+        pins / buses / lorawan. Solutions rank by most-placed → fewest errors →
+        fewest warnings → most sensors on the top layer → deterministic slot
+        order. Unknown / incompatible / over-capacity modules appear in each
+        solution's `unplaced[]` (they do not 404 the request).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SolveRequest" }
+            examples:
+              two-sensors:
+                summary: Two sensors on a standard base
+                value:
+                  core: RAK4631
+                  base: RAK19007
+                  modules: [RAK1901, RAK1902]
+              over-capacity:
+                summary: More sensors than slots — best partial, top 5
+                value:
+                  core: RAK4631
+                  base: RAK19007
+                  modules: [RAK1901, RAK1902, RAK1903, RAK1904, RAK12500]
+                  max_solutions: 5
+      responses:
+        "200":
+          description: |
+            Ranked placements. `solution_count` ≤ `max_solutions`; `truncated`
+            is true only when the search cap tripped (results then best-effort).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SolveResponse" }
+              example:
+                core: RAK4631
+                base: RAK19007
+                requested_modules: [RAK1901, RAK1902]
+                solution_count: 2
+                truncated: false
+                solutions:
+                  - rank: 1
+                    valid: true
+                    error_count: 0
+                    warning_count: 0
+                    conflicts: []
+                    warnings: []
+                    sensors_on_top: 2
+                    slots:
+                      - { slot: SENSOR_A, module: RAK1901 }
+                      - { slot: SENSOR_B, module: RAK1902 }
+                    unplaced: []
+                warnings: []
+        "400":
+          description: Malformed request body (bad JSON, missing/mistyped field).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                error:
+                  code: invalid_request
+                  message: "Field `modules` must be an array."
+        "404":
+          description: Unknown core or base id.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                error:
+                  code: base_not_found
+                  message: "Base 'RAK9999' is not known to WisMAP."
 
 # ============================================================================
 # Components
@@ -774,6 +854,13 @@ components:
           description: |
             Which module type fits this slot
             (`WisCore` | `WisIO` | `WisSensor` | `WisPower`).
+        layer:
+          type: string
+          enum: [top, bottom]
+          description: |
+            Physical face of the base the slot sits on. `top` is the default
+            (most slots); only `bottom` slots are annotated in the catalog.
+            Consumed by `/solve`'s "sensors on top" ranking.
 
     # — Modules —
 
@@ -911,6 +998,129 @@ components:
         function: { type: string, examples: [I2C_SDA] }
 
     # — Validate —
+
+    SolveRequest:
+      type: object
+      required: [base, modules]
+      properties:
+        core:
+          type: [string, "null"]
+          description: |
+            Core id. Required for bases with a `CORE` slot; optional/null for
+            coreless bases (RAK6421). Same rule as `/validate`.
+        base:
+          type: string
+          examples: [RAK19007]
+        modules:
+          type: array
+          description: |
+            Flat list of desired module ids. Duplicates allowed (the resulting
+            I2C collision is surfaced, not rejected). Unknown or base-incompatible
+            ids are returned in each solution's `unplaced[]`, not 404'd.
+          items: { type: string, examples: [RAK1901] }
+        max_solutions:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 5
+          description: |
+            How many ranked solutions to return. Default 3; out-of-range values
+            are clamped to [1, 5] (not rejected).
+        options:
+          type: object
+          properties:
+            i2c_address_overrides:
+              type: object
+              description: |
+                Same shape as `/validate`. Key format `<MODULE>@<SLOT>`,
+                value the strap-modified address, e.g. `{"RAK1901@SENSOR_C": "0x71"}`.
+              additionalProperties: { type: string }
+
+    SolveResponse:
+      type: object
+      required: [core, base, requested_modules, solution_count, truncated, solutions, warnings]
+      properties:
+        core:
+          type: [string, "null"]
+          description: Resolved core display id; null for coreless bases.
+        base: { type: string }
+        requested_modules:
+          type: array
+          items: { type: string }
+          description: The `modules` list echoed back, verbatim.
+        solution_count:
+          type: integer
+          description: Number of solutions returned (≤ max_solutions).
+        truncated:
+          type: boolean
+          description: |
+            True only when the enumeration cap tripped on a pathological input.
+            When true, the maximum-placement guarantee relaxes to best-effort.
+        solutions:
+          type: array
+          items: { $ref: "#/components/schemas/SolveSolution" }
+        warnings:
+          type: array
+          description: Top-level advisories (e.g. `enumeration_capped`).
+          items:
+            type: object
+            properties:
+              code:     { type: string }
+              severity: { type: string }
+              message:  { type: string }
+
+    SolveSolution:
+      type: object
+      required: [rank, valid, error_count, warning_count, conflicts, warnings, sensors_on_top, slots, unplaced]
+      properties:
+        rank: { type: integer, description: "1 = best by the ranking key." }
+        valid:
+          type: boolean
+          description: "True iff error_count == 0 AND unplaced is empty."
+        error_count:
+          type: integer
+          description: Count of severity-error conflicts for this layout (== conflicts.length).
+        warning_count:
+          type: integer
+          description: Count of severity-warning conflicts (== warnings.length).
+        conflicts:
+          type: array
+          description: |
+            The severity-error conflicts for this layout — the *reasons* it isn't
+            clean — same `{code, message, severity, involves, context, hint}`
+            shape as `/validate`. Lets a chooser explain a layout without
+            re-validating it.
+          items: { $ref: "#/components/schemas/Conflict" }
+        warnings:
+          type: array
+          description: Severity-warning conflicts for this layout (same shape as `/validate`).
+          items: { $ref: "#/components/schemas/Conflict" }
+        sensors_on_top:
+          type: integer
+          description: WisSensor modules placed in a top-layer slot.
+        slots:
+          type: array
+          description: The placement — same shape as /validate's `slots[]` input.
+          items:
+            type: object
+            required: [slot, module]
+            properties:
+              slot:   { type: string, examples: [SENSOR_A] }
+              module: { type: string, examples: [RAK1901] }
+        unplaced:
+          type: array
+          description: Requested modules not placed in this layout, with reasons.
+          items: { $ref: "#/components/schemas/SolveUnplaced" }
+
+    SolveUnplaced:
+      type: object
+      required: [module, reason]
+      properties:
+        module: { type: string }
+        reason:
+          type: string
+          enum: [unknown_module, incompatible_with_base, no_free_slot]
+        detail: { type: string }
 
     ValidateRequest:
       type: object

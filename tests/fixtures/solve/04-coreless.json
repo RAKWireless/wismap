@@ -1,0 +1,71 @@
+{
+  "name": "04-coreless",
+  "description": "RAK6421 Pi Hat has no CORE slot; core may be omitted.",
+  "request": {
+    "base": "RAK6421",
+    "modules": [
+      "RAK1901"
+    ]
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": null,
+    "base": "RAK6421",
+    "requested_modules": [
+      "RAK1901"
+    ],
+    "solution_count": 3,
+    "truncated": false,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 2,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 3,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      }
+    ],
+    "warnings": []
+  }
+}

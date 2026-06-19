@@ -28,7 +28,7 @@ from wismap.core import (
     get_cores, get_core,
     get_bases, get_base,
     get_modules_v1, get_module_v1,
-    validate_v1,
+    validate_v1, solve_v1,
 )
 
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
@@ -156,6 +156,24 @@ def validate():
         return _error("invalid_request", "Request body must be valid JSON.", 400)
 
     response, err, status = validate_v1(definitions, config, rules, body)
+    if err is not None:
+        code, message = err
+        return _error(code, message, status)
+    return jsonify(response), status
+
+
+# ---------------------------------------------------------------------------
+# Solve (slot placement)
+# ---------------------------------------------------------------------------
+
+@bp.route("/solve", methods=["POST"])
+def solve():
+    definitions, config, rules, compat_idx = _data()
+    body = request.get_json(silent=True)
+    if body is None:
+        return _error("invalid_request", "Request body must be valid JSON.", 400)
+
+    response, err, status = solve_v1(definitions, config, rules, compat_idx, body)
     if err is not None:
         code, message = err
         return _error(code, message, status)

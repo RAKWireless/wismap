@@ -35,9 +35,11 @@ rak19003:
       double: true
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
     SENSOR_D:
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board
   - compact

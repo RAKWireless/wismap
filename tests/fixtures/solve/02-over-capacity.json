@@ -1,0 +1,134 @@
+{
+  "name": "02-over-capacity",
+  "description": "Five sensors on a 4-sensor-slot base; one is unplaced (no_free_slot).",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK1901",
+      "RAK1902",
+      "RAK1903",
+      "RAK1904",
+      "RAK12500"
+    ]
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "requested_modules": [
+      "RAK1901",
+      "RAK1902",
+      "RAK1903",
+      "RAK1904",
+      "RAK12500"
+    ],
+    "solution_count": 3,
+    "truncated": false,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1904"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK12500",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK12500 on RAK19007."
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1904"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1903"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK12500",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK12500 on RAK19007."
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1904"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK12500",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK12500 on RAK19007."
+          }
+        ]
+      }
+    ],
+    "warnings": []
+  }
+}

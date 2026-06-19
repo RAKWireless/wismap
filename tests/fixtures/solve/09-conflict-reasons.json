@@ -1,0 +1,155 @@
+{
+  "name": "09-conflict-reasons",
+  "description": "Same sensor twice \u2014 all placements collide on I2C; conflicts[] explains why.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK1901",
+      "RAK1901"
+    ]
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "requested_modules": [
+      "RAK1901",
+      "RAK1901"
+    ],
+    "solution_count": 3,
+    "truncated": false,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": false,
+        "error_count": 1,
+        "warning_count": 0,
+        "conflicts": [
+          {
+            "code": "i2c_address_collision",
+            "message": "Possible conflict with I2C addresses",
+            "severity": "error",
+            "involves": [
+              {
+                "module": "RAK1901",
+                "slot": "SENSOR_A"
+              },
+              {
+                "module": "RAK1901",
+                "slot": "SENSOR_B"
+              }
+            ],
+            "context": {
+              "function": "I2C_ADDR",
+              "addresses": [
+                "0x70"
+              ],
+              "bus": "I2C1"
+            }
+          }
+        ],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 2,
+        "valid": false,
+        "error_count": 1,
+        "warning_count": 0,
+        "conflicts": [
+          {
+            "code": "i2c_address_collision",
+            "message": "Possible conflict with I2C addresses",
+            "severity": "error",
+            "involves": [
+              {
+                "module": "RAK1901",
+                "slot": "SENSOR_A"
+              },
+              {
+                "module": "RAK1901",
+                "slot": "SENSOR_C"
+              }
+            ],
+            "context": {
+              "function": "I2C_ADDR",
+              "addresses": [
+                "0x70"
+              ],
+              "bus": "I2C1"
+            }
+          }
+        ],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 3,
+        "valid": false,
+        "error_count": 1,
+        "warning_count": 0,
+        "conflicts": [
+          {
+            "code": "i2c_address_collision",
+            "message": "Possible conflict with I2C addresses",
+            "severity": "error",
+            "involves": [
+              {
+                "module": "RAK1901",
+                "slot": "SENSOR_A"
+              },
+              {
+                "module": "RAK1901",
+                "slot": "SENSOR_D"
+              }
+            ],
+            "context": {
+              "function": "I2C_ADDR",
+              "addresses": [
+                "0x70"
+              ],
+              "bus": "I2C1"
+            }
+          }
+        ],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      }
+    ],
+    "warnings": []
+  }
+}

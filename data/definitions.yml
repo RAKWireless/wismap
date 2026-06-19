@@ -564,7 +564,9 @@ rak5005-o:
     SENSOR_C:
       double: true
       double_blocks: SENSOR_D
-    SENSOR_D: null
+      layer: bottom
+    SENSOR_D:
+      layer: bottom
   tags:
   - base-board
 rak5801:
@@ -3813,11 +3815,14 @@ rak19001:
     SENSOR_C:
       double: true
       double_blocks: SENSOR_D
-    SENSOR_D: null
+      layer: bottom
+    SENSOR_D:
+      layer: bottom
     SENSOR_E:
       double: true
     SENSOR_F:
       double: true
+      layer: bottom
   notes:
   - AIN0 is connected to battery (ADC_VBAT)
   tags:
@@ -3884,9 +3889,11 @@ rak19003:
       double: true
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
     SENSOR_D:
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board
   - compact
@@ -3974,11 +3981,13 @@ rak19007:
       1: UART1_TX
       24: UART1_RX
     SENSOR_B: null
-    SENSOR_C: null
+    SENSOR_C:
+      layer: bottom
     SENSOR_D:
       double: true
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board
 rak19008:
@@ -4024,11 +4033,13 @@ rak19009:
       10: IO4
       12: IO3
       24: UART1_RX
+      layer: bottom
     SENSOR_B:
       1: UART1_TX
       10: IO6
       12: IO5
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board
   - compact
@@ -4067,11 +4078,13 @@ rak19010:
       1: UART1_TX
       24: UART1_RX
     SENSOR_B: null
-    SENSOR_C: null
+    SENSOR_C:
+      layer: bottom
     SENSOR_D:
       double: true
       1: UART1_TX
       24: UART1_RX
+      layer: bottom
   tags:
   - base-board
   - power-slot
@@ -4132,11 +4145,14 @@ rak19011:
     SENSOR_C:
       double: true
       double_blocks: SENSOR_D
-    SENSOR_D: null
+      layer: bottom
+    SENSOR_D:
+      layer: bottom
     SENSOR_E:
       double: true
     SENSOR_F:
       double: true
+      layer: bottom
   notes:
   - AIN0 is connected to battery (ADC_VBAT)
   tags:

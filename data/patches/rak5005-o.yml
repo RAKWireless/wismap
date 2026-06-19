@@ -41,6 +41,8 @@ rak5005-o:
     SENSOR_C:
       double: true
       double_blocks: SENSOR_D
-    SENSOR_D: null
+      layer: bottom
+    SENSOR_D:
+      layer: bottom
   tags:
   - base-board

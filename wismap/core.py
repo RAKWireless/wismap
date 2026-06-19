@@ -860,7 +860,7 @@ def _derive_base_pin_mapping_table(base_def, slot_def, show_nc=False):
 
 
 def _derive_base_slot_info(base_def):
-    """{SLOT_NAME: {double, double_blocks, accepts_type}} for combine-tool dropdowns."""
+    """{SLOT_NAME: {double, double_blocks, accepts_type, layer}} for combine-tool dropdowns."""
     out = {}
     for slot_name, overrides in (base_def.get('slots') or {}).items():
         overrides = overrides or {}
@@ -868,6 +868,7 @@ def _derive_base_slot_info(base_def):
             'double': bool(overrides.get('double', False)),
             'double_blocks': overrides.get('double_blocks'),
             'accepts_type': _slot_expected_type(slot_name),
+            'layer': overrides.get('layer', 'top'),
         }
     return out
 
@@ -1393,6 +1394,43 @@ def resolve(definitions, config, rules, core_id, base_id, slot_assignments,
     }, None, 200
 
 
+def _resolve_core_base(definitions, core, base):
+    """Resolve + validate the (core, base) pair shared by validate_v1 and solve_v1.
+
+    Returns (base_canon, core_canon, base_has_core, err):
+      - base_canon:    canonical base id (None on error)
+      - core_canon:    canonical core id, or None for coreless bases
+      - base_has_core: whether the base exposes a CORE slot
+      - err:           None, or a (code, message, http_status) tuple
+
+    Centralising this keeps the 400 (core required) / 404 (unknown core/base) /
+    coreless behaviour identical across both endpoints (spec 010 RQ-02).
+    """
+    base_canon = _to_canonical_id(base)
+    base_def = definitions.get(base_canon)
+    if not base_def or base_def.get('type') != 'WisBase':
+        return None, None, False, (
+            'base_not_found', f"Base '{base}' is not known to WisMAP.", 404)
+
+    base_has_core = 'CORE' in (base_def.get('slots') or {})
+    if base_has_core:
+        if not isinstance(core, str) or not core:
+            return base_canon, None, True, (
+                'invalid_request', "Field `core` is required for this base.", 400)
+        core_canon = _to_canonical_id(core)
+        core_def = definitions.get(core_canon)
+        if not core_def or core_def.get('type') != 'WisCore':
+            return base_canon, None, True, (
+                'core_not_found', f"Core '{core}' is not known to WisMAP.", 404)
+        return base_canon, core_canon, True, None
+
+    # Coreless base (e.g. RAK6421 Pi Hat): the host platform plays the Core role.
+    if core is not None and (not isinstance(core, str) or not core):
+        return base_canon, None, False, (
+            'invalid_request', "Field `core` must be a string when provided.", 400)
+    return base_canon, None, False, None
+
+
 def validate_v1(definitions, config, rules, request_body):
     """Validate a `{core, base, slots, options}` request body.
 
@@ -1415,16 +1453,14 @@ def validate_v1(definitions, config, rules, request_body):
     if not isinstance(slots, list):
         return None, ('invalid_request', "Field `slots` must be an array."), 400
 
-    # `core` is required when the base exposes a CORE slot, optional otherwise
-    # (e.g. RAK6421 Pi Hat, where the host Raspberry Pi plays the Core role).
-    base_canon = _to_canonical_id(base)
-    base_def = definitions.get(base_canon)
-    base_has_core = bool(base_def and 'CORE' in (base_def.get('slots') or {}))
-    if base_has_core:
-        if not isinstance(core, str) or not core:
-            return None, ('invalid_request', "Field `core` is required for this base."), 400
-    elif core is not None and (not isinstance(core, str) or not core):
-        return None, ('invalid_request', "Field `core` must be a string when provided."), 400
+    # `core` is required when the base exposes a CORE slot, optional otherwise.
+    # Resolve via the shared helper so 400/404/coreless behaviour stays identical
+    # to solve_v1 (spec 010 RQ-02).
+    _base_canon, _core_canon, base_has_core, cb_err = _resolve_core_base(
+        definitions, core, base)
+    if cb_err is not None:
+        code, message, status = cb_err
+        return None, (code, message), status
 
     # Normalize slot entries and enforce uniqueness.
     slot_assignments = {}
@@ -1480,3 +1516,255 @@ def _err_message(code, core, base):
     if code == 'base_not_found':
         return f"Base '{base}' is not known to WisMAP."
     return code
+
+
+# =============================================================================
+# Slot solver (spec 010) — solve_v1 + helpers
+# =============================================================================
+
+_SOLVE_NODE_CAP = 10000  # backstop on explored branch-and-bound nodes
+
+
+def _slot_layer(base_def, slot_name):
+    """Physical face of a slot: 'top' (default) or 'bottom'."""
+    return ((base_def.get('slots') or {}).get(slot_name) or {}).get('layer', 'top')
+
+
+def _slot_sort_index(slot_name):
+    return SLOT_ORDER.index(slot_name) if slot_name in SLOT_ORDER else len(SLOT_ORDER)
+
+
+def _enumerate_assignments(candidates, base_def, cap=_SOLVE_NODE_CAP):
+    """Branch-and-bound: find every maximum-cardinality module->slot assignment.
+
+    `candidates` is a list of dicts with keys `eligible` (list of slot names) and
+    `is_double` (bool). Returns `(assignments, truncated)` where each assignment is
+    a dict `{slot_name: candidate_index}` and all share the maximum placement
+    count M. Honours double/double_blocks: a double sensor consumes the blocked
+    sibling slot. The node cap is a backstop for pathological input; when hit,
+    `truncated` is True and M may not be the true maximum.
+    """
+    base_slots = base_def.get('slots') or {}
+    n = len(candidates)
+    state = {'M': 0, 'assigns': []}
+    nodes = [0]
+    truncated = [False]
+
+    def upper_remaining(i, occupied):
+        # Optimistic (admissible) count of candidates[i:] that still have a free
+        # eligible slot — ignores contention, so it never under-counts.
+        cnt = 0
+        for j in range(i, n):
+            if any(s not in occupied for s in candidates[j]['eligible']):
+                cnt += 1
+        return cnt
+
+    def recurse(i, placed, assign, occupied):
+        if truncated[0]:
+            return
+        if nodes[0] >= cap:
+            truncated[0] = True
+            return
+        nodes[0] += 1
+
+        if i == n:
+            if placed > state['M']:
+                state['M'] = placed
+                state['assigns'] = [dict(assign)]
+            elif placed == state['M'] and placed > 0:
+                state['assigns'].append(dict(assign))
+            return
+
+        # Prune branches that cannot match the best placement found so far.
+        if placed + upper_remaining(i, occupied) < state['M']:
+            return
+
+        cand = candidates[i]
+        for slot in cand['eligible']:
+            if slot in occupied:
+                continue
+            consumed = [slot]
+            if cand['is_double']:
+                blocks = (base_slots.get(slot) or {}).get('double_blocks')
+                if blocks:
+                    if blocks in occupied:
+                        continue
+                    consumed.append(blocks)
+            assign[slot] = i
+            for s in consumed:
+                occupied.add(s)
+            recurse(i + 1, placed + 1, assign, occupied)
+            for s in consumed:
+                occupied.discard(s)
+            del assign[slot]
+            if truncated[0]:
+                return
+        # Leave candidate i unplaced.
+        recurse(i + 1, placed, assign, occupied)
+
+    recurse(0, 0, {}, set())
+    return state['assigns'], truncated[0]
+
+
+def solve_v1(definitions, config, rules, compat_idx, request_body):
+    """Solve module->slot placement for a `{core, base, modules, ...}` request.
+
+    Returns (response, err, status). The response carries up to `max_solutions`
+    ranked placements (default 3, clamped to [1, 5]) — placements + scores only,
+    NO `resolved` pin block. The client re-fetches pins from /validate on the
+    layout it picks (spec 010). Conflict/warning counts come from reusing
+    `resolve()` internally; no conflict logic is duplicated here.
+    """
+    if not isinstance(request_body, dict):
+        return None, ('invalid_request', "Request body must be a JSON object."), 400
+
+    core = request_body.get('core')
+    base = request_body.get('base')
+    modules = request_body.get('modules')
+    options = request_body.get('options') or {}
+
+    if not isinstance(base, str) or not base:
+        return None, ('invalid_request', "Field `base` is required."), 400
+    if not isinstance(modules, list):
+        return None, ('invalid_request', "Field `modules` must be an array."), 400
+
+    # max_solutions: default 3, clamp to [1, 5] (out-of-range clamped, not rejected).
+    try:
+        max_solutions = int(request_body.get('max_solutions', 3))
+    except (TypeError, ValueError):
+        max_solutions = 3
+    max_solutions = max(1, min(5, max_solutions))
+
+    base_canon, core_canon, _base_has_core, err = _resolve_core_base(
+        definitions, core, base)
+    if err is not None:
+        code, message, status = err
+        return None, (code, message), status
+
+    base_def = definitions[base_canon]
+    base_display = _to_display_id(base_canon)
+    core_for_resolve = _to_display_id(core_canon) if core_canon else None
+    i2c_overrides = options.get('i2c_address_overrides') if isinstance(options, dict) else None
+
+    # Partition requested modules into placeable candidates vs always-unplaced.
+    candidates = []
+    always_unplaced = []
+    for m in modules:
+        if not isinstance(m, str) or not m:
+            return None, ('invalid_request',
+                          "Each entry in `modules` must be a non-empty string."), 400
+        canon = _to_canonical_id(m)
+        mdef = definitions.get(canon)
+        if mdef is None:
+            always_unplaced.append({
+                'module': m,
+                'reason': 'unknown_module',
+                'detail': f"Module '{m}' is not known to WisMAP.",
+            })
+            continue
+        # CORE placement is owned by the top-level `core` field, never the solver.
+        eligible = [s for s in compat_idx.get(canon, {}).get(base_display, [])
+                    if s != 'CORE']
+        if not eligible:
+            always_unplaced.append({
+                'module': _to_display_id(canon),
+                'reason': 'incompatible_with_base',
+                'detail': f"{_to_display_id(canon)} has no compatible slot on {base_display}.",
+            })
+            continue
+        candidates.append({
+            'display': _to_display_id(canon),
+            'canon': canon,
+            'is_sensor': mdef.get('type') == 'WisSensor',
+            'is_double': bool(mdef.get('double')) and mdef.get('type') == 'WisSensor',
+            'eligible': eligible,
+        })
+
+    assignments, truncated = _enumerate_assignments(candidates, base_def)
+    if not assignments:
+        assignments = [{}]  # nothing placeable → a single empty layout
+
+    # Dedupe by slot->module map, score each via resolve(), then rank.
+    seen = set()
+    scored = []
+    for assign in assignments:
+        slot_map = {slot: candidates[idx]['display'] for slot, idx in assign.items()}
+        key = tuple(sorted(slot_map.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+
+        resp, resolve_err, _ = resolve(
+            definitions, config, rules,
+            core_for_resolve, base_display, slot_map, i2c_overrides)
+        if resolve_err is not None:
+            continue  # defensive: validated, compatible input shouldn't hard-error
+
+        error_count = len(resp['conflicts'])
+        warning_count = len(resp['warnings'])
+        placed_idx = set(assign.values())
+        sensors_on_top = sum(
+            1 for slot, idx in assign.items()
+            if candidates[idx]['is_sensor'] and _slot_layer(base_def, slot) == 'top'
+        )
+        unplaced = list(always_unplaced)
+        for j, cand in enumerate(candidates):
+            if j not in placed_idx:
+                unplaced.append({
+                    'module': cand['display'],
+                    'reason': 'no_free_slot',
+                    'detail': f"No free compatible slot for {cand['display']} on {base_display}.",
+                })
+
+        ordered_slots = sorted(slot_map, key=_slot_sort_index)
+        slot_order_repr = tuple((_slot_sort_index(s), slot_map[s]) for s in ordered_slots)
+        scored.append({
+            'sort_key': (-len(slot_map), error_count, warning_count,
+                         -sensors_on_top, slot_order_repr),
+            'solution': {
+                'valid': error_count == 0 and not unplaced,
+                'error_count': error_count,
+                'warning_count': warning_count,
+                'conflicts': resp['conflicts'],
+                'warnings': resp['warnings'],
+                'sensors_on_top': sensors_on_top,
+                'slots': [{'slot': s, 'module': slot_map[s]} for s in ordered_slots],
+                'unplaced': unplaced,
+            },
+        })
+
+    scored.sort(key=lambda x: x['sort_key'])
+    solutions = []
+    for rank, item in enumerate(scored[:max_solutions], start=1):
+        sol = item['solution']
+        solutions.append({
+            'rank': rank,
+            'valid': sol['valid'],
+            'error_count': sol['error_count'],
+            'warning_count': sol['warning_count'],
+            'conflicts': sol['conflicts'],
+            'warnings': sol['warnings'],
+            'sensors_on_top': sol['sensors_on_top'],
+            'slots': sol['slots'],
+            'unplaced': sol['unplaced'],
+        })
+
+    warnings = []
+    if truncated:
+        warnings.append({
+            'code': 'enumeration_capped',
+            'severity': 'warning',
+            'message': (f"Search exceeded {_SOLVE_NODE_CAP} nodes; results are "
+                        f"best-effort and may not be maximum-placement."),
+        })
+
+    response = {
+        'core': core_for_resolve,
+        'base': base_display,
+        'requested_modules': list(modules),
+        'solution_count': len(solutions),
+        'truncated': truncated,
+        'solutions': solutions,
+        'warnings': warnings,
+    }
+    return response, None, 200

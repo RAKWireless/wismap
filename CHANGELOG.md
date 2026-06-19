@@ -4,6 +4,30 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
+## 0.5.0 — 2026-06-19
+
+Adds the slot solver — a placement endpoint that complements `/validate`.
+
+### API
+
+* New `POST /api/v1/solve` endpoint (spec 010): given a `core` + `base` + a flat
+  list of `modules`, returns up to `max_solutions` (default 3, clamped to 1–5)
+  ranked slot placements — placements + scores only, **no pin map** (call
+  `/validate` on the chosen layout for pins). Ranks by most-placed → fewest
+  errors → fewest warnings → most sensors on the top layer → deterministic slot
+  order; when not truncated, every returned layout is maximum-placement. Unknown,
+  base-incompatible, and over-capacity modules are reported per solution in
+  `unplaced[]`. Additive and non-breaking under the v1 contract.
+* New per-slot `layer` (`top` | `bottom`) attribute on bases, surfaced in
+  `GET /api/v1/bases/:id` as `slot_info[*].layer`. Drives the solver's top-layer
+  ranking. `top` is the default; only bottom-face slots are annotated in the
+  catalog patches.
+
+### Tests
+
+* Canonical `/api/v1/solve` fixtures under `tests/fixtures/solve/`.
+
+
 ## 0.4.0 — 2026-05-18
 
 Major release: new consumer-facing API contract, frontend migrated, and a

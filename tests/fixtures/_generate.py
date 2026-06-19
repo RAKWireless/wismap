@@ -24,19 +24,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, REPO)
 
-from wismap.core import load_data, validate_v1
+from wismap.core import load_data_v1, validate_v1, solve_v1
 
 
-def run(name, description, request, definitions, config, rules):
-    """Execute one fixture against validate_v1, render the case file."""
-    response, err, status = validate_v1(definitions, config, rules, request)
-    if err is not None:
-        code, message = err
-        expected_response = {"error": {"code": code, "message": message}}
-    else:
-        expected_response = response
-
-    path = os.path.join(HERE, "validate", f"{name}.json")
+def _write(subdir, name, description, request, status, expected_response):
+    path = os.path.join(HERE, subdir, f"{name}.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump({
@@ -49,8 +41,30 @@ def run(name, description, request, definitions, config, rules):
     print(f"wrote {path}  (status={status})")
 
 
+def run(name, description, request, definitions, config, rules):
+    """Execute one fixture against validate_v1, render the case file."""
+    response, err, status = validate_v1(definitions, config, rules, request)
+    if err is not None:
+        code, message = err
+        expected_response = {"error": {"code": code, "message": message}}
+    else:
+        expected_response = response
+    _write("validate", name, description, request, status, expected_response)
+
+
+def run_solve(name, description, request, definitions, config, rules, compat):
+    """Execute one fixture against solve_v1, render the case file."""
+    response, err, status = solve_v1(definitions, config, rules, compat, request)
+    if err is not None:
+        code, message = err
+        expected_response = {"error": {"code": code, "message": message}}
+    else:
+        expected_response = response
+    _write("solve", name, description, request, status, expected_response)
+
+
 def main():
-    definitions, config, rules = load_data(os.path.join(REPO, "data"))
+    definitions, config, rules, compat = load_data_v1(os.path.join(REPO, "data"))
 
     # 200 — clean configuration
     run("01-valid-clean", "Two compatible I2C sensors on a standard base — no conflicts.", {
@@ -193,6 +207,73 @@ def main():
             {"slot": "CORE", "module": "RAK4631"},
         ],
     }, definitions, config, rules)
+
+    # ── /api/v1/solve fixtures (spec 010) ──────────────────────────────────
+
+    # 200 — clean full fit
+    run_solve("01-clean-fit",
+        "Two compatible sensors — both placed, rank-1 valid.", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK1901", "RAK1902"],
+    }, definitions, config, rules, compat)
+
+    # 200 — over-capacity: more sensors than sensor slots → best partial
+    run_solve("02-over-capacity",
+        "Five sensors on a 4-sensor-slot base; one is unplaced (no_free_slot).", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK1901", "RAK1902", "RAK1903", "RAK1904", "RAK12500"],
+    }, definitions, config, rules, compat)
+
+    # 200 — unknown + base-incompatible modules reported, rest still solved
+    run_solve("03-incompatible",
+        "Unknown id + a WisPower module (no POWER slot on RAK19007) — both unplaced; RAK1901 placed.", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK9999", "RAK19012", "RAK1901"],
+    }, definitions, config, rules, compat)
+
+    # 200 — coreless base, core omitted
+    run_solve("04-coreless",
+        "RAK6421 Pi Hat has no CORE slot; core may be omitted.", {
+        "base": "RAK6421",
+        "modules": ["RAK1901"],
+    }, definitions, config, rules, compat)
+
+    # 200 — tie-heavy input locks a deterministic rank order
+    run_solve("05-tie-order",
+        "Two distinct sensors, symmetric placements; deterministic tiebreak fixes the order.", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK1901", "RAK1902"], "max_solutions": 5,
+    }, definitions, config, rules, compat)
+
+    # 200 — enumeration cap tripped → truncated:true (best-effort), deterministic
+    big = [m.upper() for m, d in definitions.items()
+           if d.get("type") == "WisSensor" and "RAK19011" in compat.get(m, {})][:8]
+    run_solve("06-cap-hit",
+        "Eight sensors on a large base trips the node cap → truncated, best-effort.", {
+        "core": "RAK4631", "base": "RAK19011", "modules": big,
+    }, definitions, config, rules, compat)
+
+    # 200 — top-layer tiebreak: a single sensor ranks top slots above bottom
+    run_solve("07-top-layer-tiebreak",
+        "One sensor on RAK19007; top-layer placements (A/B) outrank bottom (C/D).", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK1901"], "max_solutions": 5,
+    }, definitions, config, rules, compat)
+
+    # 200 — max_solutions clamped to 5
+    run_solve("08-max-solutions",
+        "Four sensors yield many layouts; max_solutions=99 is clamped to 5.", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK1901", "RAK1902", "RAK1903", "RAK1904"], "max_solutions": 99,
+    }, definitions, config, rules, compat)
+
+    # 200, every layout invalid — the same module twice collides on I2C; the
+    # solution carries the *reason* (conflicts[]), not just error_count.
+    run_solve("09-conflict-reasons",
+        "Same sensor twice — all placements collide on I2C; conflicts[] explains why.", {
+        "core": "RAK4631", "base": "RAK19007",
+        "modules": ["RAK1901", "RAK1901"],
+    }, definitions, config, rules, compat)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,171 @@
+{
+  "name": "08-max-solutions",
+  "description": "Four sensors yield many layouts; max_solutions=99 is clamped to 5.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK1901",
+      "RAK1902",
+      "RAK1903",
+      "RAK1904"
+    ],
+    "max_solutions": 99
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "requested_modules": [
+      "RAK1901",
+      "RAK1902",
+      "RAK1903",
+      "RAK1904"
+    ],
+    "solution_count": 5,
+    "truncated": false,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1904"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 2,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1904"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1903"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 3,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1904"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 4,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1904"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1902"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 5,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 2,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1904"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1903"
+          }
+        ],
+        "unplaced": []
+      }
+    ],
+    "warnings": []
+  }
+}

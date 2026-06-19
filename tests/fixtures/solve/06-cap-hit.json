@@ -1,0 +1,185 @@
+{
+  "name": "06-cap-hit",
+  "description": "Eight sensors on a large base trips the node cap \u2192 truncated, best-effort.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19011",
+    "modules": [
+      "RAK1901",
+      "RAK1902",
+      "RAK1903",
+      "RAK1904",
+      "RAK1905",
+      "RAK1906",
+      "RAK1910",
+      "RAK5814"
+    ]
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": "RAK4631",
+    "base": "RAK19011",
+    "requested_modules": [
+      "RAK1901",
+      "RAK1902",
+      "RAK1903",
+      "RAK1904",
+      "RAK1905",
+      "RAK1906",
+      "RAK1910",
+      "RAK5814"
+    ],
+    "solution_count": 3,
+    "truncated": true,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 3,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1904"
+          },
+          {
+            "slot": "SENSOR_E",
+            "module": "RAK1905"
+          },
+          {
+            "slot": "SENSOR_F",
+            "module": "RAK1906"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK1910",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK1910 on RAK19011."
+          },
+          {
+            "module": "RAK5814",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK5814 on RAK19011."
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 3,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1906"
+          },
+          {
+            "slot": "SENSOR_E",
+            "module": "RAK1905"
+          },
+          {
+            "slot": "SENSOR_F",
+            "module": "RAK1904"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK1910",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK1910 on RAK19011."
+          },
+          {
+            "module": "RAK5814",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK5814 on RAK19011."
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 3,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          },
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1902"
+          },
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1903"
+          },
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1906"
+          },
+          {
+            "slot": "SENSOR_E",
+            "module": "RAK1905"
+          },
+          {
+            "slot": "SENSOR_F",
+            "module": "RAK5814"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK1904",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK1904 on RAK19011."
+          },
+          {
+            "module": "RAK1910",
+            "reason": "no_free_slot",
+            "detail": "No free compatible slot for RAK1910 on RAK19011."
+          }
+        ]
+      }
+    ],
+    "warnings": [
+      {
+        "code": "enumeration_capped",
+        "severity": "warning",
+        "message": "Search exceeded 10000 nodes; results are best-effort and may not be maximum-placement."
+      }
+    ]
+  }
+}

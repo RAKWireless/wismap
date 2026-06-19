@@ -1,0 +1,109 @@
+{
+  "name": "03-incompatible",
+  "description": "Unknown id + a WisPower module (no POWER slot on RAK19007) \u2014 both unplaced; RAK1901 placed.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK9999",
+      "RAK19012",
+      "RAK1901"
+    ]
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "requested_modules": [
+      "RAK9999",
+      "RAK19012",
+      "RAK1901"
+    ],
+    "solution_count": 3,
+    "truncated": false,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK9999",
+            "reason": "unknown_module",
+            "detail": "Module 'RAK9999' is not known to WisMAP."
+          },
+          {
+            "module": "RAK19012",
+            "reason": "incompatible_with_base",
+            "detail": "RAK19012 has no compatible slot on RAK19007."
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK9999",
+            "reason": "unknown_module",
+            "detail": "Module 'RAK9999' is not known to WisMAP."
+          },
+          {
+            "module": "RAK19012",
+            "reason": "incompatible_with_base",
+            "detail": "RAK19012 has no compatible slot on RAK19007."
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "valid": false,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 0,
+        "slots": [
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": [
+          {
+            "module": "RAK9999",
+            "reason": "unknown_module",
+            "detail": "Module 'RAK9999' is not known to WisMAP."
+          },
+          {
+            "module": "RAK19012",
+            "reason": "incompatible_with_base",
+            "detail": "RAK19012 has no compatible slot on RAK19007."
+          }
+        ]
+      }
+    ],
+    "warnings": []
+  }
+}

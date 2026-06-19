@@ -1,0 +1,89 @@
+{
+  "name": "07-top-layer-tiebreak",
+  "description": "One sensor on RAK19007; top-layer placements (A/B) outrank bottom (C/D).",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK1901"
+    ],
+    "max_solutions": 5
+  },
+  "expected_status": 200,
+  "expected_response": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "requested_modules": [
+      "RAK1901"
+    ],
+    "solution_count": 4,
+    "truncated": false,
+    "solutions": [
+      {
+        "rank": 1,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_A",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 2,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 1,
+        "slots": [
+          {
+            "slot": "SENSOR_B",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 3,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 0,
+        "slots": [
+          {
+            "slot": "SENSOR_C",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      },
+      {
+        "rank": 4,
+        "valid": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "conflicts": [],
+        "warnings": [],
+        "sensors_on_top": 0,
+        "slots": [
+          {
+            "slot": "SENSOR_D",
+            "module": "RAK1901"
+          }
+        ],
+        "unplaced": []
+      }
+    ],
+    "warnings": []
+  }
+}
