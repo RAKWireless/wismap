@@ -1431,6 +1431,38 @@ def _resolve_core_base(definitions, core, base):
     return base_canon, None, False, None
 
 
+# ---------------------------------------------------------------------------
+# Request-size guards (security 012) — bound attacker-controlled input before any
+# expensive per-request work. Calibrated above the largest legitimate request
+# (largest base = 10 slots); see ai/specs/012-security-assessment/.
+# ---------------------------------------------------------------------------
+MAX_MODULES = 24        # /solve modules[]  (~2x max slot count; preserves best-partial)
+MAX_SLOTS = 12          # /validate slots[] (10 slots + CORE + margin)
+MAX_I2C_OVERRIDES = 12  # options.i2c_address_overrides entries (one-per-slot ceiling)
+
+
+def _extract_i2c_overrides(options):
+    """Return (overrides_or_None, err) for `options.i2c_address_overrides`.
+
+    Absent or null → (None, None). When present it must be an object with at most
+    MAX_I2C_OVERRIDES entries; a non-object or oversized value yields an
+    ('invalid_request', message) err tuple. (security 012 RQ-03)
+    """
+    if not isinstance(options, dict):
+        return None, None
+    overrides = options.get('i2c_address_overrides')
+    if overrides is None:
+        return None, None
+    if not isinstance(overrides, dict):
+        return None, ('invalid_request',
+                      "`options.i2c_address_overrides` must be an object.")
+    if len(overrides) > MAX_I2C_OVERRIDES:
+        return None, ('invalid_request',
+                      f"`options.i2c_address_overrides` exceeds the maximum of "
+                      f"{MAX_I2C_OVERRIDES} entries.")
+    return overrides, None
+
+
 def validate_v1(definitions, config, rules, request_body):
     """Validate a `{core, base, slots, options}` request body.
 
@@ -1452,6 +1484,9 @@ def validate_v1(definitions, config, rules, request_body):
         return None, ('invalid_request', "Field `base` is required."), 400
     if not isinstance(slots, list):
         return None, ('invalid_request', "Field `slots` must be an array."), 400
+    if len(slots) > MAX_SLOTS:
+        return None, ('invalid_request',
+                      f"`slots` exceeds the maximum of {MAX_SLOTS} entries."), 400
 
     # `core` is required when the base exposes a CORE slot, optional otherwise.
     # Resolve via the shared helper so 400/404/coreless behaviour stays identical
@@ -1500,7 +1535,9 @@ def validate_v1(definitions, config, rules, request_body):
                 f"core ({core}). Use the top-level `core` field only."
             ), 422
 
-    i2c_overrides = options.get('i2c_address_overrides') if isinstance(options, dict) else None
+    i2c_overrides, ov_err = _extract_i2c_overrides(options)
+    if ov_err is not None:
+        return None, ov_err, 400
 
     response, err, status = resolve(
         definitions, config, rules, core, base, slot_assignments, i2c_overrides
@@ -1627,6 +1664,9 @@ def solve_v1(definitions, config, rules, compat_idx, request_body):
         return None, ('invalid_request', "Field `base` is required."), 400
     if not isinstance(modules, list):
         return None, ('invalid_request', "Field `modules` must be an array."), 400
+    if len(modules) > MAX_MODULES:
+        return None, ('invalid_request',
+                      f"`modules` exceeds the maximum of {MAX_MODULES} entries."), 400
 
     # max_solutions: default 3, clamp to [1, 5] (out-of-range clamped, not rejected).
     try:
@@ -1644,7 +1684,9 @@ def solve_v1(definitions, config, rules, compat_idx, request_body):
     base_def = definitions[base_canon]
     base_display = _to_display_id(base_canon)
     core_for_resolve = _to_display_id(core_canon) if core_canon else None
-    i2c_overrides = options.get('i2c_address_overrides') if isinstance(options, dict) else None
+    i2c_overrides, ov_err = _extract_i2c_overrides(options)
+    if ov_err is not None:
+        return None, ov_err, 400
 
     # Partition requested modules into placeable candidates vs always-unplaced.
     candidates = []

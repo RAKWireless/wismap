@@ -39,6 +39,17 @@ info:
     description that begins `Convenience field; consumers may ignore.`
     Per §2 forwards-compat, ignoring them is safe.
 
+    ## Request limits
+
+    Hardening for public exposure (`ai/specs/012-security-assessment/`):
+    - Request bodies are capped at 256 KiB (`MAX_CONTENT_LENGTH`, env-tunable);
+      a larger body returns HTTP `413` (Werkzeug's default body, not the JSON
+      error envelope).
+    - `POST /validate` `slots[]` ≤ 12, `POST /solve` `modules[]` ≤ 24, and
+      `options.i2c_address_overrides` ≤ 12 entries; exceeding any of these (or a
+      non-object `i2c_address_overrides`) returns `400 invalid_request`. The
+      limits sit far above any real layout (largest base = 10 slots).
+
     ## Versioning
 
     Within `/api/v1` adding a field, endpoint, conflict code, or warning
@@ -1013,10 +1024,12 @@ components:
           examples: [RAK19007]
         modules:
           type: array
+          maxItems: 24
           description: |
             Flat list of desired module ids. Duplicates allowed (the resulting
             I2C collision is surfaced, not rejected). Unknown or base-incompatible
             ids are returned in each solution's `unplaced[]`, not 404'd.
+            Capped at 24 entries — more than that returns `400 invalid_request`.
           items: { type: string, examples: [RAK1901] }
         max_solutions:
           type: integer
@@ -1031,9 +1044,12 @@ components:
           properties:
             i2c_address_overrides:
               type: object
+              maxProperties: 12
               description: |
                 Same shape as `/validate`. Key format `<MODULE>@<SLOT>`,
                 value the strap-modified address, e.g. `{"RAK1901@SENSOR_C": "0x71"}`.
+                Capped at 12 entries; a non-object or oversized value returns
+                `400 invalid_request`.
               additionalProperties: { type: string }
 
     SolveResponse:
@@ -1137,11 +1153,14 @@ components:
           examples: [RAK19007]
         slots:
           type: array
+          maxItems: 12
           description: |
             Slot assignments for non-CORE slots. Do **not** include a
             `{slot: "CORE", ...}` entry — use the top-level `core` field.
             A matching `CORE` entry is silently dropped (tolerated);
             a disagreeing one returns 422.
+            Capped at 12 entries (largest base has 10 slots + CORE) — more
+            returns `400 invalid_request`.
           items:
             type: object
             required: [slot, module]
@@ -1153,10 +1172,13 @@ components:
           properties:
             i2c_address_overrides:
               type: object
+              maxProperties: 12
               description: |
                 Declare a strap-modified I2C address.
                 Key format: `<MODULE>@<SLOT>` (display ids).
                 Example: `{"RAK1906@SENSOR_B": "0x77"}`.
+                Capped at 12 entries; a non-object or oversized value returns
+                `400 invalid_request`.
               additionalProperties: { type: string }
 
     ValidateResponse:

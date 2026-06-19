@@ -1,0 +1,69 @@
+{
+  "name": "16-slots-over-cap-400",
+  "description": "slots[] longer than MAX_SLOTS (12) is rejected before resolution.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "slots": [
+      {
+        "slot": "SENSOR_0",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_1",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_2",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_3",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_4",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_5",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_6",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_7",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_8",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_9",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_10",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_11",
+        "module": "RAK1901"
+      },
+      {
+        "slot": "SENSOR_12",
+        "module": "RAK1901"
+      }
+    ]
+  },
+  "expected_status": 400,
+  "expected_response": {
+    "error": {
+      "code": "invalid_request",
+      "message": "`slots` exceeds the maximum of 12 entries."
+    }
+  }
+}

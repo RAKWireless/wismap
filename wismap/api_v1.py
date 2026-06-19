@@ -30,8 +30,13 @@ from wismap.core import (
     get_modules_v1, get_module_v1,
     validate_v1, solve_v1,
 )
+from wismap.extensions import limiter
 
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
+
+# /solve is the most expensive endpoint; give it a stricter, env-tunable limit on
+# top of the global default (security 012 RQ-09).
+_SOLVE_LIMIT = os.environ.get("RATELIMIT_SOLVE", "30/minute")
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _OPENAPI_FILE = os.path.join(_HERE, "openapi.yaml")
@@ -167,6 +172,7 @@ def validate():
 # ---------------------------------------------------------------------------
 
 @bp.route("/solve", methods=["POST"])
+@limiter.limit(_SOLVE_LIMIT)
 def solve():
     definitions, config, rules, compat_idx = _data()
     body = request.get_json(silent=True)

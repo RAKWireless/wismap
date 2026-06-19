@@ -6,16 +6,15 @@ This module wires the blueprint, applies rate limits, exposes the
 image-proxy utility, and serves the React SPA.
 """
 
-import logging
 import os
 import requests as http_requests
 from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from wismap.core import load_data_v1
 from wismap.api_v1 import bp as api_v1_bp
+from wismap.extensions import limiter
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -30,6 +29,16 @@ definitions, config, rules, compat_slots_index = load_data_v1(_data_folder)
 
 app = Flask(__name__, static_folder=_frontend_dist, static_url_path="")
 app.json.sort_keys = False
+
+# Honor X-Forwarded-* from a single trusted front proxy/CDN so rate limiting keys
+# on the real client IP, not the proxy (security 012). No effect when accessed
+# directly; assumes exactly one proxy hop in the public deployment.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+# Reject oversized request bodies before JSON parsing (security 012 RQ-05).
+# Werkzeug returns its default 413 page (not the v1 JSON envelope) for this case.
+app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_CONTENT_LENGTH", 256 * 1024))
+
 CORS(app)
 
 # Stash the loaded data on the app so the v1 blueprint can access it.
@@ -37,30 +46,13 @@ app.config["WISMAP_DATA"] = (definitions, config, rules, compat_slots_index)
 app.register_blueprint(api_v1_bp)
 
 # ---------------------------------------------------------------------------
-# Rate limiting — configurable via environment variables
+# Rate limiting — the limiter lives in wismap/extensions.py (shared with the v1
+# blueprint so it can decorate /solve); env-configurable. Bind it to this app.
 # ---------------------------------------------------------------------------
 
-_default_limit = os.environ.get("RATELIMIT_DEFAULT", "120/minute")
 _proxy_limit = os.environ.get("RATELIMIT_PROXY", "60/minute")
-_storage_uri = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
-_enabled = os.environ.get("RATELIMIT_ENABLED", "true").lower() in ("1", "true", "yes")
 
-logger = logging.getLogger(__name__)
-
-def _on_breach(request_limit):
-    logger.warning(
-        "Rate limit exceeded: %s from %s on %s %s",
-        request_limit.limit, get_remote_address(), request.method, request.path,
-    )
-
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=[_default_limit],
-    storage_uri=_storage_uri,
-    enabled=_enabled,
-    on_breach=_on_breach,
-)
+limiter.init_app(app)
 
 
 @app.after_request
@@ -90,20 +82,41 @@ def set_security_headers(response):
 # Image proxy — frontend utility for PDF export (not part of the v1 contract)
 # ---------------------------------------------------------------------------
 
+_IMAGE_PROXY_PREFIX = "https://images.docs.rakwireless.com/"
+_IMAGE_MAX_BYTES = int(os.environ.get("IMAGE_PROXY_MAX_BYTES", 10 * 1024 * 1024))
+
 @app.route("/api/image-proxy")
 @limiter.limit(_proxy_limit)
 def api_image_proxy():
-    """Proxy remote images to avoid CORS issues in PDF export."""
+    """Proxy remote RAK CDN images to avoid CORS issues in PDF export.
+
+    Security (012): allowlist the exact host prefix, do NOT follow redirects (the
+    allowlist only vetted the initial URL — a redirect could reach internal hosts),
+    require an image/* upstream, and cap the streamed body so a large or hostile
+    response can't exhaust memory.
+    """
     url = request.args.get("url", "")
-    if not url.startswith("https://images.docs.rakwireless.com/"):
+    if not url.startswith(_IMAGE_PROXY_PREFIX):
         return jsonify({"error": "URL not allowed"}), 403
     try:
-        resp = http_requests.get(url, timeout=15)
-        resp.raise_for_status()
-        return Response(
-            resp.content,
-            content_type=resp.headers.get("Content-Type", "image/png"),
-        )
+        with http_requests.get(
+            url, timeout=15, allow_redirects=False, stream=True
+        ) as resp:
+            # raise_for_status() ignores 3xx, so reject redirects explicitly.
+            if resp.is_redirect or resp.is_permanent_redirect:
+                return jsonify({"error": "Redirects are not allowed"}), 502
+            resp.raise_for_status()
+            content_type = resp.headers.get("Content-Type", "")
+            if not content_type.startswith("image/"):
+                return jsonify({"error": "Upstream is not an image"}), 502
+            chunks = []
+            total = 0
+            for chunk in resp.iter_content(chunk_size=64 * 1024):
+                total += len(chunk)
+                if total > _IMAGE_MAX_BYTES:
+                    return jsonify({"error": "Image too large"}), 502
+                chunks.append(chunk)
+            return Response(b"".join(chunks), content_type=content_type)
     except Exception:
         return jsonify({"error": "Failed to fetch image"}), 502
 

@@ -22,4 +22,8 @@ COPY --from=frontend /app/frontend/dist ./frontend/dist
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "wismap.api:app"]
+# Worker count is env-tunable via WEB_CONCURRENCY (gunicorn reads it natively when
+# --workers is omitted). Default 5; override per environment (security 012 / constitution §Stack).
+ENV WEB_CONCURRENCY=5
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wismap.api:app"]

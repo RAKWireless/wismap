@@ -1,0 +1,19 @@
+{
+  "name": "18-i2c-overrides-not-object-400",
+  "description": "options.i2c_address_overrides that is not an object is rejected.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "slots": [],
+    "options": {
+      "i2c_address_overrides": "0x71"
+    }
+  },
+  "expected_status": 400,
+  "expected_response": {
+    "error": {
+      "code": "invalid_request",
+      "message": "`options.i2c_address_overrides` must be an object."
+    }
+  }
+}

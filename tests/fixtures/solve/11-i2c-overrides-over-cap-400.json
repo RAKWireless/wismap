@@ -1,0 +1,35 @@
+{
+  "name": "11-i2c-overrides-over-cap-400",
+  "description": "options.i2c_address_overrides with more than MAX_I2C_OVERRIDES (12) entries is rejected.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK1901"
+    ],
+    "options": {
+      "i2c_address_overrides": {
+        "RAK1901@SLOT0": "0x71",
+        "RAK1901@SLOT1": "0x71",
+        "RAK1901@SLOT2": "0x71",
+        "RAK1901@SLOT3": "0x71",
+        "RAK1901@SLOT4": "0x71",
+        "RAK1901@SLOT5": "0x71",
+        "RAK1901@SLOT6": "0x71",
+        "RAK1901@SLOT7": "0x71",
+        "RAK1901@SLOT8": "0x71",
+        "RAK1901@SLOT9": "0x71",
+        "RAK1901@SLOT10": "0x71",
+        "RAK1901@SLOT11": "0x71",
+        "RAK1901@SLOT12": "0x71"
+      }
+    }
+  },
+  "expected_status": 400,
+  "expected_response": {
+    "error": {
+      "code": "invalid_request",
+      "message": "`options.i2c_address_overrides` exceeds the maximum of 12 entries."
+    }
+  }
+}

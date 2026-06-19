@@ -1,0 +1,42 @@
+{
+  "name": "10-modules-over-cap-400",
+  "description": "modules[] longer than MAX_MODULES (24) is rejected before enumeration.",
+  "request": {
+    "core": "RAK4631",
+    "base": "RAK19007",
+    "modules": [
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901",
+      "RAK1901"
+    ]
+  },
+  "expected_status": 400,
+  "expected_response": {
+    "error": {
+      "code": "invalid_request",
+      "message": "`modules` exceeds the maximum of 24 entries."
+    }
+  }
+}
