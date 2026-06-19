@@ -8,7 +8,7 @@ Storage stays ``memory://`` by design (constitution §Scope: "No Redis"). With m
 than one gunicorn worker the per-IP buckets are per-worker, so limits are
 approximate (≈ nominal × workers); accepted because the request-size caps in
 ``wismap/core.py`` are the real DoS defense. See
-``ai/specs/012-security-assessment/`` for the rationale.
+``.sdd/specs/012-security-assessment/`` for the rationale.
 """
 
 import logging

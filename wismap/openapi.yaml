@@ -8,13 +8,13 @@ info:
 
     This document is the **canonical machine-readable contract**. The
     rationale and prose narrative live in the spec workflow under
-    `ai/specs/005-wismap-api-v1/` (consumer team's draft + our accepted
+    `.sdd/specs/005-wismap-api-v1/` (consumer team's draft + our accepted
     deviations). Read those before negotiating any breaking change.
 
     ## Conventions
 
     Deviations from the consumer team's Appendix A sketch are noted with
-    references into §`N` of `ai/specs/005-wismap-api-v1/review.md`.
+    references into §`N` of `.sdd/specs/005-wismap-api-v1/review.md`.
 
     - **Slot names** are descriptive (`SENSOR_A`, `IO_A`, `CORE`, `POWER`),
       not single-letter. (§3.1)
@@ -41,7 +41,7 @@ info:
 
     ## Request limits
 
-    Hardening for public exposure (`ai/specs/012-security-assessment/`):
+    Hardening for public exposure (`.sdd/specs/012-security-assessment/`):
     - Request bodies are capped at 256 KiB (`MAX_CONTENT_LENGTH`, env-tunable);
       a larger body returns HTTP `413` (Werkzeug's default body, not the JSON
       error envelope).
@@ -54,7 +54,7 @@ info:
 
     Within `/api/v1` adding a field, endpoint, conflict code, or warning
     code is **non-breaking**. Removing or renaming any of them requires a
-    new major prefix (`/api/v2/`). See `ai/constitution.md`.
+    new major prefix (`/api/v2/`). See `.sdd/constitution.md`.
   contact:
     name: WisMAP
     url: https://github.com/RAKWireless
@@ -63,7 +63,7 @@ servers:
   - url: http://localhost:5000
     description: Local development
   # TODO — add the production server URL once hosting is decided
-  # (open question §12 Q1 of ai/specs/005-wismap-api-v1/spec.md).
+  # (open question §12 Q1 of .sdd/specs/005-wismap-api-v1/spec.md).
 
 tags:
   - name: Health
@@ -886,7 +886,7 @@ components:
           description: |
             Manufacturer-prefixed primary chip name where known
             (e.g. `Sensirion SHTC3`). Many modules are not yet populated;
-            see `ai/specs/007-power-data-backfill/`.
+            see `.sdd/specs/007-power-data-backfill/`.
         type:
           type: string
           enum: [WisIO, WisSensor, WisModule, WisPower, Accessories]
@@ -991,7 +991,7 @@ components:
           type: [integer, "null"]
           description: |
             Time after enabling `3V3_S` before the module is ready to talk.
-            `null` in v1 — see `ai/specs/007-power-data-backfill/`.
+            `null` in v1 — see `.sdd/specs/007-power-data-backfill/`.
         current_typical_uA:
           type: [integer, "null"]
           description: Typical active-mode current draw, microamps. `null` in v1.
@@ -1357,7 +1357,7 @@ components:
           description: |
             Closed enum. Adding a new code is non-breaking; renaming or
             removing one requires a new major version. `high_current_estimate`
-            is reserved but dormant until `ai/specs/007-power-data-backfill/`
+            is reserved but dormant until `.sdd/specs/007-power-data-backfill/`
             ships.
         message: { type: string }
         severity:

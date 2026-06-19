@@ -14,7 +14,7 @@ frontend/dist
 # Agent
 AGENTS.md
 CLAUDE.md
-ai
+.sdd
 .claude
 
 # Vagrant

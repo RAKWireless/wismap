@@ -1434,7 +1434,7 @@ def _resolve_core_base(definitions, core, base):
 # ---------------------------------------------------------------------------
 # Request-size guards (security 012) — bound attacker-controlled input before any
 # expensive per-request work. Calibrated above the largest legitimate request
-# (largest base = 10 slots); see ai/specs/012-security-assessment/.
+# (largest base = 10 slots); see .sdd/specs/012-security-assessment/.
 # ---------------------------------------------------------------------------
 MAX_MODULES = 24        # /solve modules[]  (~2x max slot count; preserves best-partial)
 MAX_SLOTS = 12          # /validate slots[] (10 slots + CORE + margin)

@@ -37,7 +37,7 @@ formal OpenAPI document with an interactive Swagger UI.
 
 * New versioned JSON API under `/api/v1/*`, designed against the WisBlock
   Code Generator team's draft and the negotiated review document
-  (see `ai/specs/005-wismap-api-v1/`):
+  (see `.sdd/specs/005-wismap-api-v1/`):
   - `GET /api/v1/healthz`
   - `GET /api/v1/cores` and `GET /api/v1/cores/:id`
   - `GET /api/v1/bases` and `GET /api/v1/bases/:id`
@@ -77,7 +77,7 @@ formal OpenAPI document with an interactive Swagger UI.
 * All non-Core/Base modules carry a `category`
   (`sensor | io | display | communication | storage | power`); 22 modules
   carry a concrete `chip` name (more populated incrementally — see
-  `ai/specs/007-power-data-backfill/`).
+  `.sdd/specs/007-power-data-backfill/`).
 * `rules.yml` gained `code` + `severity` per rule for structured conflict
   output.
 
