@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { fetchBases, fetchBase, fetchCores, fetchModules, validate, solve } from '../api'
 import FunctionTable from './FunctionTable'
+import { encodeCombineId } from '../utils/combineId'
 
 export default function CombineTool({ initialConfig, onConfigConsumed }) {
   const [bases, setBases] = useState([])
@@ -22,6 +23,20 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
   const [expandedRank, setExpandedRank] = useState(1)
   const solveReqId = useRef(0)
 
+  // Keep the URL hash in sync with the current config so copying from the
+  // address bar always gives the current state. replaceState avoids emitting a
+  // hashchange event (which would re-apply the config) and avoids polluting
+  // the browser history with every dropdown change.
+  const shareHash = useMemo(() => {
+    if (!selectedBase || !baseInfo) return null
+    const modules = baseInfo.slots.map(s => assignments[s] || '')
+    return encodeCombineId(selectedBase, modules)
+  }, [selectedBase, baseInfo, assignments])
+
+  useEffect(() => {
+    if (shareHash) history.replaceState(null, '', shareHash)
+  }, [shareHash])
+
   // Initial: load the catalog once.
   useEffect(() => {
     fetchBases().then(setBases)
@@ -29,7 +44,7 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
     fetchModules().then(setAllModules)
   }, [])
 
-  // Apply a pending #combine/... config once the base is known.
+  // Apply a pending #c/... config once the base is known.
   useEffect(() => {
     if (!initialConfig) return
     pendingConfig.current = initialConfig
@@ -72,13 +87,22 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
     return out
   }, [baseInfo, cores, allModules])
 
-  // Once baseInfo + eligibility are ready, apply any pending #combine config
-  // OR reset to empty assignments.
+  // Once baseInfo is ready, apply any pending #c/ config OR reset to empty
+  // assignments. This effect re-runs when allModules arrives: computeBlocked
+  // needs each module's `double` flag to decide whether a deep-linked double
+  // sensor blocks its sibling slot, and on a fresh tab fetchModules() can
+  // resolve after baseInfo. We therefore defer consuming pendingConfig until
+  // the catalog is loaded (the early return below) — that also prevents the
+  // re-fire from hitting the else branch and wiping the freshly applied config,
+  // since pendingConfig is only cleared once allModules is non-empty.
   useEffect(() => {
     if (!baseInfo) return
     const slotNames = baseInfo.slots
     const config = pendingConfig.current
     if (config && config.base.toUpperCase() === baseInfo.id && config.modules.length > 0) {
+      // Wait for the module catalog so double sensors block their sibling on
+      // load instead of only after the first manual edit.
+      if (allModules.length === 0) return
       pendingConfig.current = null
       const next = {}
       for (let i = 0; i < slotNames.length; i++) {
@@ -194,7 +218,7 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
 
   // Apply a chosen solution: rebuild assignments from its slots, keeping the
   // user's Core, then let the existing auto-validate refresh the result table.
-  // Reuses the same assignment + computeBlocked path as the #combine deep-link.
+  // Reuses the same assignment + computeBlocked path as the #c/ deep-link.
   const applySolution = (sol) => {
     const slotInfo = baseInfo.slot_info || {}
     const next = {}

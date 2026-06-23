@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { exportMarkdown, exportPdf } from '../utils/exportCombine'
+import { encodeCombineId } from '../utils/combineId'
 
 export default function FunctionTable({ result }) {
   const [copied, setCopied] = useState(false)
@@ -29,19 +30,12 @@ export default function FunctionTable({ result }) {
     }
   }
 
-  // Build shareable URL from slot_module (lowercase for #combine hash).
   const buildShareUrl = () => {
     const entries = Object.entries(slot_module)
     const baseEntry = entries.find(([key]) => key === 'BASE')
     if (!baseEntry) return null
-    const base = baseEntry[1].toLowerCase()
-    const modules = entries
-      .filter(([key]) => key !== 'BASE')
-      .map(([, v]) => (v === 'EMPTY' || v === 'BLOCKED') ? 'empty' : v.toLowerCase())
-    while (modules.length > 0 && modules[modules.length - 1] === 'empty') {
-      modules.pop()
-    }
-    return `#combine/${base}/${modules.join('/')}`
+    const modules = entries.filter(([key]) => key !== 'BASE').map(([, v]) => v)
+    return encodeCombineId(baseEntry[1], modules)
   }
 
   const handleCopyLink = (e) => {

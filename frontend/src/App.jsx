@@ -4,12 +4,12 @@ import ModuleList from './components/ModuleList'
 import ModuleDetail from './components/ModuleDetail'
 import CombineTool from './components/CombineTool'
 
+import { decodeCombineId } from './utils/combineId'
+
 function parseHash(hash) {
-  // #combine/base/mod1/mod2/...
-  if (hash.startsWith('#combine/')) {
-    const parts = hash.slice('#combine/'.length).split('/')
-    if (parts.length < 1 || !parts[0]) return null
-    return { type: 'combine', base: parts[0], modules: parts.slice(1) }
+  // #c/<v><tokens> — versioned fixed-width hex combine id
+  if (hash.startsWith('#c/')) {
+    return decodeCombineId(hash)
   }
   // #module/<id>
   if (hash.startsWith('#module/')) {
