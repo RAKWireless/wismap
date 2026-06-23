@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: WisMAP API
-  version: "0.5.0"      # MUST match wismap.__version__ — checked by tests/check_openapi_coverage.py
+  version: "0.5.1"      # MUST match wismap.__version__ — checked by tests/check_openapi_coverage.py
   description: |
     Versioned JSON API for the RAKwireless WisBlock pin-mapping tool.
 
@@ -99,7 +99,7 @@ paths:
               schema: { $ref: "#/components/schemas/HealthResponse" }
               example:
                 status: ok
-                version: "0.5.0"
+                version: "0.5.1"
 
   # ─── Cores ──────────────────────────────────────────────────────────────
 

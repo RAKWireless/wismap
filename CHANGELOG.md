@@ -4,6 +4,36 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
+## 0.5.1 — 2026-06-23
+
+Compact shareable combine links, a long-sensor data correction, and a
+combine-tool deep-link fix.
+
+### Data
+
+* The `double` (long sensor) flag now matches the physical module set. Added to
+  `RAK12500` and `RAK12501` (GNSS); removed from `RAK12001` (Fingerprint) and
+  `RAK12059` (Liquid Level), which are single-slot. 
+
+### Frontend
+
+* Compact, versioned combine share links. The hash is now `#c/<v><tokens>`,
+  encoding the base and each slot as a fixed-width hex code derived from its RAK
+  number (empty/blocked slots zero-filled, trailing empties trimmed); a leading
+  version digit lets the format evolve. Replaces the verbose
+  `#combine/<base>/<mod>/…` form. The URL is kept in sync with the current layout
+  via `history.replaceState`, so copying from the address bar always reflects the
+  current selection without polluting browser history.
+
+### Fixes
+
+* Combine tool: a double sensor opened from a shared `#c/...` link now blocks its
+  sibling slot on page load instead of only after the first manual edit. The
+  deep-link apply effect ran before the module catalog finished loading, so
+  `computeBlocked` couldn't see the `double` flag; it now defers applying the
+  config until the catalog is available and re-runs when it arrives.
+
+
 ## 0.5.0 — 2026-06-19
 
 Adds the slot solver — a placement endpoint that complements `/validate`.
