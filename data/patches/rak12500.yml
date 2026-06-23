@@ -5,6 +5,7 @@ rak12500:
   - https://images.docs.rakwireless.com/wisblock/rak12500/rak12500.png
   schematics:
   - https://images.docs.rakwireless.com/wisblock/rak12500/datasheet/schematic.png
+  double: true
   mapping:
     9: null
     12: 1PPS

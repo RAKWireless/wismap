@@ -6,6 +6,7 @@ rak12501:
   schematics:
   - https://images.docs.rakwireless.com/wisblock/rak12501/datasheet/schematic.png
   description: RAK12501 GNSS GPS Location Module Quectel L76K
+  double: true
   tags:
   - gnss
   - gps

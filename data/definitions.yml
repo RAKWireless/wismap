@@ -2153,6 +2153,7 @@ rak12500:
   - https://images.docs.rakwireless.com/wisblock/rak12500/rak12500.png
   schematics:
   - https://images.docs.rakwireless.com/wisblock/rak12500/datasheet/schematic.png
+  double: true
   i2c_address: '0x42'
   tags:
   - gnss
@@ -2178,6 +2179,7 @@ rak12501:
   - https://images.docs.rakwireless.com/wisblock/rak12501/rak12501.png
   schematics:
   - https://images.docs.rakwireless.com/wisblock/rak12501/datasheet/schematic.png
+  double: true
   tags:
   - gnss
   - gps
