@@ -6,14 +6,18 @@ This module wires the blueprint, applies rate limits, exposes the
 image-proxy utility, and serves the React SPA.
 """
 
+import logging
 import os
+import sys
+
 import requests as http_requests
 from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from wismap.auth import AuthConfig, AuthConfigError
 from wismap.core import load_data_v1
-from wismap.api_v1 import bp as api_v1_bp
+from wismap.api_v1 import bp as api_v1_bp, gate as auth_gate
 from wismap.extensions import limiter
 
 # ---------------------------------------------------------------------------
@@ -41,6 +45,21 @@ app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_CONTENT_LENGTH", 256 
 
 CORS(app)
 
+# ---------------------------------------------------------------------------
+# Auth (spec 009) — load the key/secret config once at boot. Fail closed: if
+# auth is enabled but misconfigured (missing secret or keys file), exit rather
+# than start in an insecure state (RQ-11). `WISMAP_AUTH_ENABLED=false` is the
+# explicit local-dev escape hatch.
+# ---------------------------------------------------------------------------
+try:
+    auth_config = AuthConfig.from_env()
+except (AuthConfigError, FileNotFoundError, ValueError) as exc:
+    logging.getLogger(__name__).critical("API auth misconfigured at boot: %s", exc)
+    sys.exit(1)
+
+app.secret_key = auth_config.secret_key
+app.config["WISMAP_AUTH"] = auth_config
+
 # Stash the loaded data on the app so the v1 blueprint can access it.
 app.config["WISMAP_DATA"] = (definitions, config, rules, compat_slots_index)
 app.register_blueprint(api_v1_bp)
@@ -51,6 +70,15 @@ app.register_blueprint(api_v1_bp)
 # ---------------------------------------------------------------------------
 
 _proxy_limit = os.environ.get("RATELIMIT_PROXY", "60/minute")
+
+# Register the auth gate as an APP-LEVEL before_request BEFORE the limiter binds
+# its own (also app-level) before_request. App-level hooks run in registration
+# order, so this guarantees auth is evaluated before any rate-limit check: an
+# unauthenticated /validate or /solve gets a 403 without consuming a limiter
+# bucket (RQ-14). NOTE: a blueprint-level (`@bp.before_request`) gate would run
+# *after* the limiter's app-level check, so registering here — ahead of
+# init_app — is load-bearing, not stylistic.
+app.before_request(auth_gate)
 
 limiter.init_app(app)
 
@@ -131,10 +159,15 @@ def serve_spa(path):
     # If the file exists in the static folder, serve it
     if path and os.path.isfile(os.path.join(_frontend_dist, path)):
         return send_from_directory(_frontend_dist, path)
-    # Otherwise serve index.html (SPA routing)
+    # Otherwise serve index.html (SPA routing). This is the one surface that mints
+    # the browser's session+CSRF cookies (RQ-05/RQ-07) — and only when no valid
+    # session cookie is already present, so they stay sticky across reloads.
     index = os.path.join(_frontend_dist, "index.html")
     if os.path.isfile(index):
-        return send_from_directory(_frontend_dist, "index.html")
+        resp = send_from_directory(_frontend_dist, "index.html")
+        if auth_config.enabled and not auth_config.has_valid_session_cookie(request):
+            auth_config.mint_session(resp, secure=request.is_secure)
+        return resp
     return jsonify({"error": "Frontend not built. Run: make frontend-build"}), 404
 
 # ---------------------------------------------------------------------------

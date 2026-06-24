@@ -19,10 +19,12 @@ Error responses follow the spec's envelope:
   { "error": { "code": "<code>", "message": "<msg>", "details": {...} } }
 """
 
+import logging
 import os
 
 from flask import Blueprint, jsonify, request, current_app, send_from_directory, Response
 
+import wismap.auth as auth
 from wismap import __version__
 from wismap.core import (
     get_cores, get_core,
@@ -31,6 +33,8 @@ from wismap.core import (
     validate_v1, solve_v1,
 )
 from wismap.extensions import limiter
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 
@@ -53,6 +57,46 @@ def _error(code, message, status, details=None):
 def _data():
     """Pull the loaded data tuple stashed on the app at startup."""
     return current_app.config["WISMAP_DATA"]
+
+
+# ---------------------------------------------------------------------------
+# Auth gate (spec 009)
+# ---------------------------------------------------------------------------
+# One guard covers the two compute-bound endpoints; every other route stays open
+# (RQ-08/RQ-09). `gate` is registered as an APP-LEVEL before_request in api.py,
+# ahead of the rate limiter, so an unauthenticated request is rejected before the
+# limiter touches its bucket (RQ-14) — see the note at its registration site.
+
+_GATED = {"api_v1.validate", "api_v1.solve"}
+
+
+def _deny(reason):
+    # Log path + reason only — never the presented key (RQ-13).
+    logger.warning("auth: deny path=%s reason=%s", request.path, reason)
+    return _error("forbidden", "Valid API key required", 403)
+
+
+def gate():
+    """Allow a gated endpoint only with a valid proof; leave every other route open."""
+    if request.endpoint not in _GATED:
+        return None
+    cfg = current_app.config["WISMAP_AUTH"]
+    if not cfg.enabled:
+        return None  # auth disabled (local dev)
+    # Bearer takes precedence: a present header is decided on the bearer path
+    # alone — a present-but-invalid key denies outright, with no session
+    # fallthrough (RQ-03).
+    if auth.bearer_present(request):
+        label = cfg.verify_bearer(request)
+        if label is not None:
+            logger.info("auth: allow bearer label=%s path=%s", label, request.path)
+            return None
+        return _deny("invalid")
+    if cfg.verify_session(request):
+        logger.info("auth: allow session path=%s", request.path)
+        return None
+    reason = "csrf_mismatch" if request.cookies.get(auth.SESSION_COOKIE) else "missing"
+    return _deny(reason)
 
 
 # ---------------------------------------------------------------------------

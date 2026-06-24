@@ -6,8 +6,24 @@ function qs(params) {
   return '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
 }
 
+// Auth (spec 009): the compute-bound endpoints (/validate, /solve) are gated.
+// The SPA proves itself with the session+CSRF double-submit — the wismap_session
+// cookie is sent automatically (same-origin), and the wismap_csrf cookie value is
+// echoed back in the X-CSRF-Token header. No API key is embedded in the bundle.
+function readCookie(name) {
+  return document.cookie.split('; ').find(c => c.startsWith(name + '='))?.split('=')[1]
+}
+
+function postHeaders() {
+  const csrf = readCookie('wismap_csrf')
+  return {
+    'Content-Type': 'application/json',
+    ...(csrf ? { 'X-CSRF-Token': decodeURIComponent(csrf) } : {}),
+  }
+}
+
 async function getJson(url) {
-  const res = await fetch(url)
+  const res = await fetch(url, { credentials: 'same-origin' })
   if (!res.ok) {
     if (res.status === 404) return null
     throw new Error(`${res.status} ${res.statusText}: ${url}`)
@@ -55,8 +71,9 @@ export async function fetchModule(id, showNc = false) {
 export async function validate({ core, base, slots, options }) {
   const res = await fetch(`${BASE}/validate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: postHeaders(),
     body: JSON.stringify({ core, base, slots, options }),
+    credentials: 'same-origin',
   })
   return res.json()
 }
@@ -66,8 +83,9 @@ export async function validate({ core, base, slots, options }) {
 export async function solve({ core, base, modules, max_solutions, options }) {
   const res = await fetch(`${BASE}/solve`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: postHeaders(),
     body: JSON.stringify({ core, base, modules, max_solutions, options }),
+    credentials: 'same-origin',
   })
   return res.json()
 }

@@ -4,6 +4,27 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
+## Unreleased
+
+API authentication for the compute-bound endpoints.
+
+### Added
+
+* **API key auth for `POST /api/v1/validate` and `POST /api/v1/solve`** (spec
+  009). Machine consumers send `Authorization: Bearer <key>`; keys live in a YAML
+  file (`WISMAP_API_KEYS_FILE`) and rotate via a server restart. The browser SPA
+  authenticates transparently with a session + CSRF cookie pair — no key in the
+  bundle. Discovery/read endpoints stay public. New env vars
+  `WISMAP_AUTH_ENABLED`, `WISMAP_API_KEYS_FILE`, `WISMAP_SECRET_KEY`; when auth is
+  enabled the server fails closed (refuses to start) if the secret or keys file
+  is missing.
+
+### API
+
+* `openapi.yaml` documents `securitySchemes.bearerAuth` and a `403 Forbidden`
+  response on `/validate` and `/solve` (additive — no breaking change within v1).
+
+
 ## 0.5.1 — 2026-06-23
 
 Compact shareable combine links, a long-sensor data correction, and a

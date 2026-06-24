@@ -117,6 +117,38 @@ Test fixtures — canonical request/response pairs for `/api/v1/validate` and
 `/api/v1/solve` — live in `tests/fixtures/{validate,solve}/` for
 downstream-consumer CI.
 
+### Authentication
+
+`POST /api/v1/validate` and `POST /api/v1/solve` (the compute-bound endpoints)
+require authentication; all discovery/read (`GET`) endpoints stay public.
+
+**Machine consumers** send an API key as a bearer token:
+
+```
+curl -X POST http://localhost:5000/api/v1/validate \
+     -H "Authorization: Bearer <key>" \
+     -H "Content-Type: application/json" \
+     -d @request.json
+```
+
+Keys live in a YAML file pointed at by `WISMAP_API_KEYS_FILE` — one
+`{key, label}` entry each; see `data/api_keys.example.yml`. Generate a key with:
+
+```
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Keys are read once at boot, so rotation is a file edit plus a server restart.
+
+**The browser SPA** needs no key: on load the server mints a `wismap_session`
+cookie and a `wismap_csrf` token, and the SPA replays the CSRF token as an
+`X-CSRF-Token` header on each `/validate` / `/solve` call.
+
+Auth is **on by default**. For local development without keys, set
+`WISMAP_AUTH_ENABLED=false`. When enabled, `WISMAP_API_KEYS_FILE` and
+`WISMAP_SECRET_KEY` are required — the server refuses to start without them
+(fail closed).
+
 ## Environment variables
 
 The following environment variables can be used to configure the server:
@@ -128,6 +160,9 @@ The following environment variables can be used to configure the server:
 | `RATELIMIT_DEFAULT` | `120/minute` | Default rate limit for all API endpoints |
 | `RATELIMIT_PROXY` | `60/minute` | Rate limit for `GET /api/image-proxy` |
 | `RATELIMIT_STORAGE_URI` | `memory://` | Storage backend for rate limit counters (use `redis://host:6379` for multi-worker deployments) |
+| `WISMAP_AUTH_ENABLED` | `true` | Gate `POST /validate` + `/solve` behind auth. Set `false` for local dev (no keys needed; ephemeral session secret) |
+| `WISMAP_API_KEYS_FILE` | _(none)_ | Path to the YAML API-keys file (a `{key, label}` list). **Required** when auth is enabled |
+| `WISMAP_SECRET_KEY` | _(none)_ | Secret that signs the SPA session cookie and derives CSRF tokens. **Required** when auth is enabled |
 
 Rate limit values use the format `<amount>/<period>` where period is `second`, `minute`, `hour`, or `day`.
 

@@ -11,6 +11,12 @@ info:
     `.sdd/specs/005-wismap-api-v1/` (consumer team's draft + our accepted
     deviations). Read those before negotiating any breaking change.
 
+    ## Authentication
+
+    `POST /validate` and `POST /solve` are gated (spec 009-api-key-auth): send
+    `Authorization: Bearer <key>`. All discovery/read endpoints stay public. The
+    browser SPA uses a session+CSRF cookie pair instead of a key.
+
     ## Conventions
 
     Deviations from the consumer team's Appendix A sketch are noted with
@@ -336,6 +342,8 @@ paths:
       operationId: validate
       summary: Validate a configuration
       tags: [Validation]
+      security:
+        - bearerAuth: []
       description: |
         Returns 200 with `valid: true|false` for every well-formed request.
         Conflicts are **not errors** — they appear in the `conflicts[]`
@@ -441,6 +449,8 @@ paths:
                 error:
                   code: invalid_request
                   message: "Field `core` is required for this base."
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: Unknown core or base id.
           content:
@@ -468,6 +478,8 @@ paths:
       operationId: solve
       summary: Solve module placement (which slot each module goes in)
       tags: [Validation]
+      security:
+        - bearerAuth: []
       description: |
         Given a `core` + `base` + a flat list of desired `modules`, return up to
         `max_solutions` (default 3, max 5) ranked slot assignments. Answers
@@ -532,6 +544,8 @@ paths:
                 error:
                   code: invalid_request
                   message: "Field `modules` must be an array."
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: Unknown core or base id.
           content:
@@ -547,6 +561,19 @@ paths:
 # ============================================================================
 
 components:
+
+  # ─── Security schemes ───────────────────────────────────────────────────
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: |
+        Opaque API key sent as `Authorization: Bearer <key>`. Required on
+        `POST /validate` and `POST /solve`. Keys are issued and rotated
+        server-side (see spec 009-api-key-auth). The browser SPA authenticates
+        with a session+CSRF cookie pair instead and does not send this header.
 
   # ─── Parameters ─────────────────────────────────────────────────────────
 
@@ -642,6 +669,18 @@ components:
               code: module_not_found
               message: "Module 'RAK9999' is not known to WisMAP."
               details: { module: "RAK9999" }
+    Forbidden:
+      description: |
+        Authentication required/failed. `POST /validate` and `POST /solve` need
+        either a valid `Authorization: Bearer` API key or the browser SPA's
+        session+CSRF pair. See spec 009-api-key-auth.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example:
+            error:
+              code: forbidden
+              message: "Valid API key required"
 
   # ─── Schemas ────────────────────────────────────────────────────────────
 

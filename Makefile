@@ -45,7 +45,7 @@ serve: .venv/touchfile
 	set -e ; . .venv/bin/activate ; python -m wismap.api
 
 check-openapi: .venv/touchfile
-	set -e ; . .venv/bin/activate ; python tests/check_openapi_coverage.py
+	set -e ; . .venv/bin/activate ; WISMAP_AUTH_ENABLED=false python tests/check_openapi_coverage.py
 
 # ---------------------------------------------------------------------------
 # Frontend

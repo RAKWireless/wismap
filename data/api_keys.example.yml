@@ -1,0 +1,20 @@
+# WisMAP API keys — EXAMPLE / TEMPLATE (spec 009-api-key-auth).
+#
+# Copy this to a real file (e.g. data/api_keys.local.yml, or a path outside the
+# repo), point WISMAP_API_KEYS_FILE at it, and restart the server. Real key
+# files matching data/api_keys*.yml are gitignored — this *.example.yml is the
+# one exception. NEVER commit real keys.
+#
+# Format: a YAML list. Each entry is a long random `key` plus a human `label`
+# that appears in the access log on a successful request.
+#
+# Generate a key:
+#   python -c "import secrets; print(secrets.token_urlsafe(48))"
+#
+# Keys are read once at boot; rotation = edit this file + restart the server.
+# Uncomment and replace the entries below in your real file:
+#
+# - key: "REPLACE-WITH-A-LONG-RANDOM-STRING"
+#   label: wisblock-code-generator-prod
+# - key: "REPLACE-WITH-ANOTHER-RANDOM-STRING"
+#   label: alice-dev-laptop
