@@ -163,6 +163,7 @@ The following environment variables can be used to configure the server:
 | `WISMAP_AUTH_ENABLED` | `true` | Gate `POST /validate` + `/solve` behind auth. Set `false` for local dev (no keys needed; ephemeral session secret) |
 | `WISMAP_API_KEYS_FILE` | _(none)_ | Path to the YAML API-keys file (a `{key, label}` list). **Required** when auth is enabled |
 | `WISMAP_SECRET_KEY` | _(none)_ | Secret that signs the SPA session cookie and derives CSRF tokens. **Required** when auth is enabled |
+| `WISMAP_LOG_LEVEL` | `INFO` | Level for the `wismap.*` loggers (boot key-load line, per-request auth `label`, denials). Set `WARNING` for quieter logs |
 
 Rate limit values use the format `<amount>/<period>` where period is `second`, `minute`, `hour`, or `day`.
 

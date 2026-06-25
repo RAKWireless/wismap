@@ -21,6 +21,22 @@ from wismap.api_v1 import bp as api_v1_bp, gate as auth_gate
 from wismap.extensions import limiter
 
 # ---------------------------------------------------------------------------
+# Logging — surface the app's INFO logs (the boot key-load line and the
+# per-request auth-success `label`, RQ-13) in the container logs. gunicorn
+# captures stderr, but `wismap.*` loggers default to WARNING with no handler,
+# so configure the namespace explicitly here, before AuthConfig.from_env() runs.
+# Quiet it with WISMAP_LOG_LEVEL=WARNING (denials stay at WARNING regardless).
+# ---------------------------------------------------------------------------
+_log_level = os.environ.get("WISMAP_LOG_LEVEL", "INFO").upper()
+_wismap_logger = logging.getLogger("wismap")
+if not _wismap_logger.handlers:
+    _log_handler = logging.StreamHandler()
+    _log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    _wismap_logger.addHandler(_log_handler)
+_wismap_logger.setLevel(_log_level)
+_wismap_logger.propagate = False
+
+# ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
 

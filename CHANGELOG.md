@@ -17,7 +17,9 @@ API authentication for the compute-bound endpoints.
   bundle. Discovery/read endpoints stay public. New env vars
   `WISMAP_AUTH_ENABLED`, `WISMAP_API_KEYS_FILE`, `WISMAP_SECRET_KEY`; when auth is
   enabled the server fails closed (refuses to start) if the secret or keys file
-  is missing.
+  is missing. Successful and denied auth events are logged (the matched consumer
+  `label` on success, never the key); `WISMAP_LOG_LEVEL` (default `INFO`) tunes
+  verbosity.
 
 ### API
 
