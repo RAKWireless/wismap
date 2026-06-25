@@ -23,6 +23,7 @@ Vagrantfile
 
 # Private
 docker-compose-contabo01.yml
+.env
 
 # API keys (spec 009) — real key files are never committed; the example is kept
 data/api_keys*.yml
