@@ -5,4 +5,15 @@ services:
       - "5000:5000"
     volumes:
       - ./data:/app/data:ro,Z
+    environment:
+      # API auth (spec 009). Provide these via a .env file next to this compose
+      # file, or export them in the host shell. See README "Authentication".
+      # Auth is ON by default; the server fails closed (exits) if enabled without
+      # a secret + keys file. For a keyless local run set WISMAP_AUTH_ENABLED=false.
+      WISMAP_AUTH_ENABLED: "${WISMAP_AUTH_ENABLED:-true}"
+      # Keys file lives in the mounted (read-only) data dir; create data/api_keys.yml
+      # on the host (it is gitignored). Override the path here if needed.
+      WISMAP_API_KEYS_FILE: "${WISMAP_API_KEYS_FILE:-/app/data/api_keys.yml}"
+      # Never hardcode the secret here — keep it in .env / the host environment.
+      WISMAP_SECRET_KEY: "${WISMAP_SECRET_KEY:-}"
     restart: unless-stopped
