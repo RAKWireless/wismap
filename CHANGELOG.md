@@ -4,7 +4,7 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
-## Unreleased
+## 0.5.2 — 2026-06-25
 
 API authentication for the compute-bound endpoints.
 
