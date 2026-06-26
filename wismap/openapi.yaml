@@ -6,48 +6,39 @@ info:
   description: |
     Versioned JSON API for the RAKwireless WisBlock pin-mapping tool.
 
-    This document is the **canonical machine-readable contract**. The
-    rationale and prose narrative live in the spec workflow under
-    `.sdd/specs/005-wismap-api-v1/` (consumer team's draft + our accepted
-    deviations). Read those before negotiating any breaking change.
+    This document is the **canonical machine-readable contract** for the API.
 
     ## Authentication
 
-    `POST /validate` and `POST /solve` are gated (spec 009-api-key-auth): send
+    `POST /validate` and `POST /solve` are gated: send
     `Authorization: Bearer <key>`. All discovery/read endpoints stay public. The
     browser SPA uses a session+CSRF cookie pair instead of a key.
 
     ## Conventions
 
-    Deviations from the consumer team's Appendix A sketch are noted with
-    references into §`N` of `.sdd/specs/005-wismap-api-v1/review.md`.
-
     - **Slot names** are descriptive (`SENSOR_A`, `IO_A`, `CORE`, `POWER`),
-      not single-letter. (§3.1)
+      not single-letter.
     - **Pin role names** are unprefixed (`I2C1_SDA`). The Arduino-style
       `WB_*` alias is exposed alongside in
-      `resolved.slots[*].pins[*].wisblock_pin`. (§3.2)
+      `resolved.slots[*].pins[*].wisblock_pin`.
     - **Module taxonomy** exposes both `type` (WisMAP physical class:
       `WisCore | WisIO | WisSensor | WisPower | WisModule | Accessories`)
       and `category` (functional:
       `sensor | io | display | communication | storage | power | core | base`).
-      (§3.3)
     - **Module / Core / Base IDs** are uppercase in responses (`RAK1901`);
-      accepted case-insensitively on input. (§3.4)
+      accepted case-insensitively on input.
     - **`core` in `/validate`** is required only when the base exposes a
-      CORE slot. Coreless bases (e.g. RAK6421 Pi Hat) may omit it. (§3.5)
+      CORE slot. Coreless bases (e.g. RAK6421 Pi Hat) may omit it.
 
     ## Extension fields
 
     Every response also carries fields that the WisMAP frontend and
-    internal tools consume but that are not part of the consumer-team
-    contract. They are marked here with `x-extension: true` and a
-    description that begins `Convenience field; consumers may ignore.`
-    Per §2 forwards-compat, ignoring them is safe.
+    internal tools consume but that are not part of the core contract.
+    They are marked here with `x-extension: true` and a description that
+    begins `Convenience field; consumers may ignore.` Ignoring them is safe.
 
     ## Request limits
 
-    Hardening for public exposure (`.sdd/specs/012-security-assessment/`):
     - Request bodies are capped at 256 KiB (`MAX_CONTENT_LENGTH`, env-tunable);
       a larger body returns HTTP `413` (Werkzeug's default body, not the JSON
       error envelope).
@@ -60,7 +51,7 @@ info:
 
     Within `/api/v1` adding a field, endpoint, conflict code, or warning
     code is **non-breaking**. Removing or renaming any of them requires a
-    new major prefix (`/api/v2/`). See `.sdd/constitution.md`.
+    new major prefix (`/api/v2/`).
   contact:
     name: WisMAP
     url: https://github.com/RAKWireless
@@ -68,8 +59,11 @@ info:
 servers:
   - url: http://localhost:5000
     description: Local development
-  # TODO — add the production server URL once hosting is decided
-  # (open question §12 Q1 of .sdd/specs/005-wismap-api-v1/spec.md).
+  # At serve time `/api/v1/openapi.yaml` rewrites this block to the host that
+  # served the request (honouring X-Forwarded-* via ProxyFix), so Swagger UI
+  # "Try it out" targets the live deployment instead of localhost. This on-disk
+  # default only applies if the spec is read straight off disk. See
+  # openapi_doc() in wismap/api_v1.py.
 
 tags:
   - name: Health
@@ -464,7 +458,7 @@ paths:
           description: |
             Request shape valid but semantically rejectable: duplicate slot
             in `slots[]`, or `CORE` entry in `slots[]` that disagrees with
-            the top-level `core`. See §3.5 of the consumer-contract review.
+            the top-level `core`.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -572,7 +566,7 @@ components:
       description: |
         Opaque API key sent as `Authorization: Bearer <key>`. Required on
         `POST /validate` and `POST /solve`. Keys are issued and rotated
-        server-side (see spec 009-api-key-auth). The browser SPA authenticates
+        server-side. The browser SPA authenticates
         with a session+CSRF cookie pair instead and does not send this header.
 
   # ─── Parameters ─────────────────────────────────────────────────────────
@@ -673,7 +667,7 @@ components:
       description: |
         Authentication required/failed. `POST /validate` and `POST /solve` need
         either a valid `Authorization: Bearer` API key or the browser SPA's
-        session+CSRF pair. See spec 009-api-key-auth.
+        session+CSRF pair.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -924,8 +918,7 @@ components:
           type: [string, "null"]
           description: |
             Manufacturer-prefixed primary chip name where known
-            (e.g. `Sensirion SHTC3`). Many modules are not yet populated;
-            see `.sdd/specs/007-power-data-backfill/`.
+            (e.g. `Sensirion SHTC3`). Many modules are not yet populated.
         type:
           type: string
           enum: [WisIO, WisSensor, WisModule, WisPower, Accessories]
@@ -1030,7 +1023,7 @@ components:
           type: [integer, "null"]
           description: |
             Time after enabling `3V3_S` before the module is ready to talk.
-            `null` in v1 — see `.sdd/specs/007-power-data-backfill/`.
+            `null` in v1.
         current_typical_uA:
           type: [integer, "null"]
           description: Typical active-mode current draw, microamps. `null` in v1.
@@ -1186,7 +1179,7 @@ components:
           description: |
             Core id. Required for bases that expose a `CORE` slot
             (the common case). Optional/null for coreless bases
-            (e.g. RAK6421 Pi Hat). See §3.5 of `005-wismap-api-v1/review.md`.
+            (e.g. RAK6421 Pi Hat).
         base:
           type: string
           examples: [RAK19007]
@@ -1396,8 +1389,7 @@ components:
           description: |
             Closed enum. Adding a new code is non-breaking; renaming or
             removing one requires a new major version. `high_current_estimate`
-            is reserved but dormant until `.sdd/specs/007-power-data-backfill/`
-            ships.
+            is reserved but dormant in v1.
         message: { type: string }
         severity:
           type: string

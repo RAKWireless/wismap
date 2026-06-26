@@ -21,6 +21,7 @@ Error responses follow the spec's envelope:
 
 import logging
 import os
+import re
 
 from flask import Blueprint, jsonify, request, current_app, send_from_directory, Response
 
@@ -45,6 +46,11 @@ _SOLVE_LIMIT = os.environ.get("RATELIMIT_SOLVE", "30/minute")
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _OPENAPI_FILE = os.path.join(_HERE, "openapi.yaml")
 _SWAGGER_DIR = os.path.join(_HERE, "static", "swagger-ui")
+
+# The hand-authored spec carries a localhost dev default in its `servers` list.
+# Match the whole top-level block (the `servers:` line plus its indented items
+# and comments) so it can be swapped for the host that served the request.
+_SERVERS_BLOCK_RE = re.compile(r"^servers:\n(?:[ \t#].*\n?)*", re.MULTILINE)
 
 
 def _error(code, message, status, details=None):
@@ -236,9 +242,24 @@ def solve():
 
 @bp.route("/openapi.yaml")
 def openapi_doc():
-    """Serve the canonical OpenAPI 3.1 document (hand-authored)."""
+    """Serve the canonical OpenAPI 3.1 document (hand-authored).
+
+    The on-disk ``servers`` list defaults to ``http://localhost:5000`` for local
+    development. Rewrite it to the host that actually served this request so the
+    Swagger UI "Try it out" calls hit the live deployment instead of localhost.
+    ``request.host_url`` reflects the external scheme/host via ProxyFix (api.py).
+    """
     with open(_OPENAPI_FILE, encoding="utf-8") as f:
-        return Response(f.read(), mimetype="application/yaml")
+        spec = f.read()
+
+    base = request.host_url.rstrip("/")
+    servers = (
+        "servers:\n"
+        f"  - url: {base}\n"
+        "    description: This deployment\n"
+    )
+    spec = _SERVERS_BLOCK_RE.sub(lambda _m: servers, spec, count=1)
+    return Response(spec, mimetype="application/yaml")
 
 
 @bp.route("/docs")
