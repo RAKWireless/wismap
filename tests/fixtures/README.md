@@ -64,7 +64,7 @@ for f in pathlib.Path("vendor/wismap-fixtures/validate").glob("*.json"):
 ```
 
 Full-document `assertEqual(body, expected)` is **not recommended** — per the
-versioning policy (§9 of the spec) WisMAP may add new fields to a response
+versioning policy, WisMAP may add new fields to a response
 within a major version, which would break exact-equality assertions. Compare
 on the contract you depend on.
 

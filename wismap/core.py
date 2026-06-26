@@ -390,7 +390,7 @@ def _strip_private(conflict):
 def _detect_conflicts(definitions, slot_module, function_slot, rules):
     """Legacy shape adapter — returns (highlighted_functions, free_text_notes).
 
-    Kept for the legacy combine() path until the frontend migrates in Phase 4.
+    Kept for the legacy combine() path until the frontend migrates.
     """
     structured = _evaluate_rules_v2(definitions, slot_module, function_slot, rules, None)
     functions = []
@@ -1359,7 +1359,7 @@ def resolve(definitions, config, rules, core_id, base_id, slot_assignments,
         }
 
     # Frontend extension data — the legacy combine() output shape.
-    # The consumer contract ignores these fields per §2 forwards-compat.
+    # The consumer contract ignores these fields for forwards-compat.
     columns = ['Function']
     for k in slot_module:
         columns.append(SLOT_NAMES.get(k, k))
@@ -1404,7 +1404,7 @@ def _resolve_core_base(definitions, core, base):
       - err:           None, or a (code, message, http_status) tuple
 
     Centralising this keeps the 400 (core required) / 404 (unknown core/base) /
-    coreless behaviour identical across both endpoints (spec 010 RQ-02).
+    coreless behaviour identical across both endpoints.
     """
     base_canon = _to_canonical_id(base)
     base_def = definitions.get(base_canon)
@@ -1432,9 +1432,9 @@ def _resolve_core_base(definitions, core, base):
 
 
 # ---------------------------------------------------------------------------
-# Request-size guards (security 012) — bound attacker-controlled input before any
+# Request-size guards — bound attacker-controlled input before any
 # expensive per-request work. Calibrated above the largest legitimate request
-# (largest base = 10 slots); see .sdd/specs/012-security-assessment/.
+# (largest base = 10 slots).
 # ---------------------------------------------------------------------------
 MAX_MODULES = 24        # /solve modules[]  (~2x max slot count; preserves best-partial)
 MAX_SLOTS = 12          # /validate slots[] (10 slots + CORE + margin)
@@ -1446,7 +1446,7 @@ def _extract_i2c_overrides(options):
 
     Absent or null → (None, None). When present it must be an object with at most
     MAX_I2C_OVERRIDES entries; a non-object or oversized value yields an
-    ('invalid_request', message) err tuple. (security 012 RQ-03)
+    ('invalid_request', message) err tuple.
     """
     if not isinstance(options, dict):
         return None, None
@@ -1490,7 +1490,7 @@ def validate_v1(definitions, config, rules, request_body):
 
     # `core` is required when the base exposes a CORE slot, optional otherwise.
     # Resolve via the shared helper so 400/404/coreless behaviour stays identical
-    # to solve_v1 (spec 010 RQ-02).
+    # to solve_v1.
     _base_canon, _core_canon, base_has_core, cb_err = _resolve_core_base(
         definitions, core, base)
     if cb_err is not None:
@@ -1516,7 +1516,7 @@ def validate_v1(definitions, config, rules, request_body):
             return None, ('duplicate_slot', f"Slot '{slot_name}' appears more than once."), 422
         slot_assignments[slot_name] = module_id
 
-    # §3.5: CORE entry in slots[] tolerated only if it matches top-level `core`.
+    # CORE entry in slots[] tolerated only if it matches top-level `core`.
     if len(core_entries) > 1:
         return None, ('duplicate_slot', "CORE appears more than once in slots[]."), 422
     if core_entries:
@@ -1556,7 +1556,7 @@ def _err_message(code, core, base):
 
 
 # =============================================================================
-# Slot solver (spec 010) — solve_v1 + helpers
+# Slot solver — solve_v1 + helpers
 # =============================================================================
 
 _SOLVE_NODE_CAP = 10000  # backstop on explored branch-and-bound nodes
@@ -1649,7 +1649,7 @@ def solve_v1(definitions, config, rules, compat_idx, request_body):
     Returns (response, err, status). The response carries up to `max_solutions`
     ranked placements (default 3, clamped to [1, 5]) — placements + scores only,
     NO `resolved` pin block. The client re-fetches pins from /validate on the
-    layout it picks (spec 010). Conflict/warning counts come from reusing
+    layout it picks. Conflict/warning counts come from reusing
     `resolve()` internally; no conflict logic is duplicated here.
     """
     if not isinstance(request_body, dict):

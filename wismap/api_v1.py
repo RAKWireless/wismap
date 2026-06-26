@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 
 # /solve is the most expensive endpoint; give it a stricter, env-tunable limit on
-# top of the global default (security 012 RQ-09).
+# top of the global default.
 _SOLVE_LIMIT = os.environ.get("RATELIMIT_SOLVE", "30/minute")
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -66,18 +66,18 @@ def _data():
 
 
 # ---------------------------------------------------------------------------
-# Auth gate (spec 009)
+# Auth gate
 # ---------------------------------------------------------------------------
-# One guard covers the two compute-bound endpoints; every other route stays open
-# (RQ-08/RQ-09). `gate` is registered as an APP-LEVEL before_request in api.py,
+# One guard covers the two compute-bound endpoints; every other route stays open.
+# `gate` is registered as an APP-LEVEL before_request in api.py,
 # ahead of the rate limiter, so an unauthenticated request is rejected before the
-# limiter touches its bucket (RQ-14) — see the note at its registration site.
+# limiter touches its bucket — see the note at its registration site.
 
 _GATED = {"api_v1.validate", "api_v1.solve"}
 
 
 def _deny(reason):
-    # Log path + reason only — never the presented key (RQ-13).
+    # Log path + reason only — never the presented key.
     logger.warning("auth: deny path=%s reason=%s", request.path, reason)
     return _error("forbidden", "Valid API key required", 403)
 
@@ -91,7 +91,7 @@ def gate():
         return None  # auth disabled (local dev)
     # Bearer takes precedence: a present header is decided on the bearer path
     # alone — a present-but-invalid key denies outright, with no session
-    # fallthrough (RQ-03).
+    # fallthrough.
     if auth.bearer_present(request):
         label = cfg.verify_bearer(request)
         if label is not None:
@@ -109,8 +109,8 @@ def gate():
 # Health
 # ---------------------------------------------------------------------------
 
-# /healthz is also exposed at the app root for liveness probes; Phase 2 adds the
-# v1-prefixed alias only. The blueprint owns the v1-prefixed path.
+# /healthz is also exposed at the app root for liveness probes; the blueprint
+# owns the v1-prefixed path.
 @bp.route("/healthz")
 def healthz():
     return jsonify({"status": "ok", "version": __version__})

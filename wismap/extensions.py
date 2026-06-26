@@ -1,14 +1,13 @@
-"""Shared Flask extensions (security 012).
+"""Shared Flask extensions.
 
 The rate limiter is created here, app-less, so both the app shell (`wismap/api.py`)
 and the v1 blueprint (`wismap/api_v1.py`) can import it without a circular import.
 It is bound to the application via ``limiter.init_app(app)`` in ``wismap/api.py``.
 
-Storage stays ``memory://`` by design (constitution §Scope: "No Redis"). With more
+Storage stays ``memory://`` by design (no Redis). With more
 than one gunicorn worker the per-IP buckets are per-worker, so limits are
 approximate (≈ nominal × workers); accepted because the request-size caps in
-``wismap/core.py`` are the real DoS defense. See
-``.sdd/specs/012-security-assessment/`` for the rationale.
+``wismap/core.py`` are the real DoS defense.
 """
 
 import logging

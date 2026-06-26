@@ -6,7 +6,7 @@ function qs(params) {
   return '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
 }
 
-// Auth (spec 009): the compute-bound endpoints (/validate, /solve) are gated.
+// Auth: the compute-bound endpoints (/validate, /solve) are gated.
 // The SPA proves itself with the session+CSRF double-submit — the wismap_session
 // cookie is sent automatically (same-origin), and the wismap_csrf cookie value is
 // echoed back in the X-CSRF-Token header. No API key is embedded in the bundle.

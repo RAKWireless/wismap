@@ -1,12 +1,12 @@
 """
-WisMAP API authentication (spec 009-api-key-auth).
+WisMAP API authentication.
 
 Pure verification + minting helpers. This module imports nothing from
 ``wismap.api`` / ``wismap.api_v1`` (in fact it needs no Flask import at all), so
 the dependency direction stays strictly one-way: the v1 blueprint imports this
 module, never the reverse. The gate itself — a ``before_request`` hook that
-allowlists the two compute-bound endpoints — is wired in ``wismap/api_v1.py``
-(Phase 2). Keeping the logic here framework-agnostic also makes it testable
+allowlists the two compute-bound endpoints — is wired in ``wismap/api_v1.py``.
+Keeping the logic here framework-agnostic also makes it testable
 without a live app context.
 
 Two proofs are accepted by the gate:
@@ -16,8 +16,7 @@ Two proofs are accepted by the gate:
   * ``wismap_session`` + ``X-CSRF-Token`` double-submit — the browser SPA. The
     session cookie carries an HMAC-signed session id; the CSRF token is itself
     HMAC-bound to that session id with the app secret, so the pair is verifiable
-    without any server-side state (matches the "No external state" constitution
-    rule).
+    without any server-side state (no external state required).
 
 Stdlib only (``hmac``, ``hashlib``, ``secrets``); no third-party auth library.
 """
@@ -35,7 +34,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-# Cookie / header names (spec 009 §User-facing behavior).
+# Cookie / header names.
 SESSION_COOKIE = "wismap_session"
 CSRF_COOKIE = "wismap_csrf"
 CSRF_HEADER = "X-CSRF-Token"
@@ -48,7 +47,7 @@ _SEP = "."
 
 class AuthConfigError(Exception):
     """Raised by :meth:`AuthConfig.from_env` when auth is enabled but required
-    configuration is missing or unreadable. The app shell (Phase 2, ``api.py``)
+    configuration is missing or unreadable. The app shell (``api.py``)
     catches this at boot and exits non-zero — fail closed, never start insecure.
     """
 
@@ -113,7 +112,7 @@ def _csrf_salt(sid: str) -> str:
 def bearer_present(request) -> bool:
     """True when the request carries an ``Authorization: Bearer`` header.
 
-    The gate uses this to honour RQ-03: a *present* bearer header decides the
+    The gate uses this so a *present* bearer header decides the
     request on the bearer path alone — a present-but-invalid key is an outright
     deny and must NOT fall through to the session/CSRF path.
     """
@@ -127,7 +126,7 @@ def bearer_present(request) -> bool:
 @dataclass
 class AuthConfig:
     """Boot-time auth configuration. Created once via :meth:`from_env`, stashed on
-    ``app.config["WISMAP_AUTH"]`` (Phase 2), and used by the gate hook."""
+    ``app.config["WISMAP_AUTH"]``, and used by the gate hook."""
 
     enabled: bool
     keys: dict[str, str]   # {sha256(key): label}; empty when disabled
@@ -239,7 +238,7 @@ class AuthConfig:
         sticky across plain navigations, which carry the session cookie but not the
         ``X-CSRF-Token`` header — so :meth:`verify_session` (which requires the full
         double-submit pair) is the wrong check there. A tampered/absent cookie is
-        treated as "no session", so it self-heals on the next page load (RQ-05).
+        treated as "no session", so it self-heals on the next page load.
         """
         signed = request.cookies.get(SESSION_COOKIE)
         return bool(signed) and _unsign(self.secret_key, "session", signed) is not None

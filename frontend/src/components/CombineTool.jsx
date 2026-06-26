@@ -146,7 +146,7 @@ export default function CombineTool({ initialConfig, onConfigConsumed }) {
     }
     const slotInfo = baseInfo.slot_info || {}
     const baseHasCoreSlot = baseInfo.slots.includes('CORE')
-    // Find the Core (CORE slot assignment) and pass it at top-level per §3.5.
+    // Find the Core (CORE slot assignment) and pass it at top-level.
     let coreId = null
     const slots = []
     for (const [slotName, moduleId] of Object.entries(assignments)) {

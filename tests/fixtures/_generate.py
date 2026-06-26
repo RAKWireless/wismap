@@ -208,7 +208,7 @@ def main():
         ],
     }, definitions, config, rules)
 
-    # 400 — slots[] over the request-size cap (security 012 RQ-02)
+    # 400 — slots[] over the request-size cap
     run("16-slots-over-cap-400",
         "slots[] longer than MAX_SLOTS (12) is rejected before resolution.", {
         "core": "RAK4631",
@@ -216,7 +216,7 @@ def main():
         "slots": [{"slot": f"SENSOR_{i}", "module": "RAK1901"} for i in range(13)],
     }, definitions, config, rules)
 
-    # 400 — i2c_address_overrides over the entry cap (security 012 RQ-03)
+    # 400 — i2c_address_overrides over the entry cap
     run("17-i2c-overrides-over-cap-400",
         "options.i2c_address_overrides with more than MAX_I2C_OVERRIDES (12) entries is rejected.", {
         "core": "RAK4631",
@@ -225,7 +225,7 @@ def main():
         "options": {"i2c_address_overrides": {f"RAK1901@SLOT{i}": "0x71" for i in range(13)}},
     }, definitions, config, rules)
 
-    # 400 — i2c_address_overrides not an object (security 012 RQ-03)
+    # 400 — i2c_address_overrides not an object
     run("18-i2c-overrides-not-object-400",
         "options.i2c_address_overrides that is not an object is rejected.", {
         "core": "RAK4631",
@@ -234,7 +234,7 @@ def main():
         "options": {"i2c_address_overrides": "0x71"},
     }, definitions, config, rules)
 
-    # ── /api/v1/solve fixtures (spec 010) ──────────────────────────────────
+    # ── /api/v1/solve fixtures ─────────────────────────────────────────────
 
     # 200 — clean full fit
     run_solve("01-clean-fit",
@@ -301,14 +301,14 @@ def main():
         "modules": ["RAK1901", "RAK1901"],
     }, definitions, config, rules, compat)
 
-    # 400 — modules[] over the request-size cap (security 012 RQ-01)
+    # 400 — modules[] over the request-size cap
     run_solve("10-modules-over-cap-400",
         "modules[] longer than MAX_MODULES (24) is rejected before enumeration.", {
         "core": "RAK4631", "base": "RAK19007",
         "modules": ["RAK1901"] * 25,
     }, definitions, config, rules, compat)
 
-    # 400 — i2c_address_overrides over the entry cap on /solve (security 012 RQ-03)
+    # 400 — i2c_address_overrides over the entry cap on /solve
     run_solve("11-i2c-overrides-over-cap-400",
         "options.i2c_address_overrides with more than MAX_I2C_OVERRIDES (12) entries is rejected.", {
         "core": "RAK4631", "base": "RAK19007",

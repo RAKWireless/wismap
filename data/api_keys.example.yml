@@ -1,4 +1,4 @@
-# WisMAP API keys — EXAMPLE / TEMPLATE (spec 009-api-key-auth).
+# WisMAP API keys — EXAMPLE / TEMPLATE.
 #
 # Copy this to a real file (e.g. data/api_keys.local.yml, or a path outside the
 # repo), point WISMAP_API_KEYS_FILE at it, and restart the server. Real key

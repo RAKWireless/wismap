@@ -755,8 +755,7 @@ components:
             lora_pins:
               type: [object, "null"]
               description: |
-                MCU-pin map for the on-board LoRa SPI. `null` in v1 until
-                Phase 6 of the data-backfill spec populates them.
+                MCU-pin map for the on-board LoRa SPI. `null` in v1.
               additionalProperties: { type: string }
             power_pins:
               type: [object, "null"]

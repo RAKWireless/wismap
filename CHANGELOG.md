@@ -63,7 +63,7 @@ Adds the slot solver — a placement endpoint that complements `/validate`.
 
 ### API
 
-* New `POST /api/v1/solve` endpoint (spec 010): given a `core` + `base` + a flat
+* New `POST /api/v1/solve` endpoint: given a `core` + `base` + a flat
   list of `modules`, returns up to `max_solutions` (default 3, clamped to 1–5)
   ranked slot placements — placements + scores only, **no pin map** (call
   `/validate` on the chosen layout for pins). Ranks by most-placed → fewest
@@ -89,8 +89,7 @@ formal OpenAPI document with an interactive Swagger UI.
 ### API
 
 * New versioned JSON API under `/api/v1/*`, designed against the WisBlock
-  Code Generator team's draft and the negotiated review document
-  (see `.sdd/specs/005-wismap-api-v1/`):
+  Code Generator team's draft:
   - `GET /api/v1/healthz`
   - `GET /api/v1/cores` and `GET /api/v1/cores/:id`
   - `GET /api/v1/bases` and `GET /api/v1/bases/:id`
@@ -129,8 +128,7 @@ formal OpenAPI document with an interactive Swagger UI.
   `core_socket`.
 * All non-Core/Base modules carry a `category`
   (`sensor | io | display | communication | storage | power`); 22 modules
-  carry a concrete `chip` name (more populated incrementally — see
-  `.sdd/specs/007-power-data-backfill/`).
+  carry a concrete `chip` name (more populated incrementally).
 * `rules.yml` gained `code` + `severity` per rule for structured conflict
   output.
 

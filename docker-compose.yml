@@ -6,7 +6,7 @@ services:
     volumes:
       - ./data:/app/data:ro,Z
     environment:
-      # API auth (spec 009). Provide these via a .env file next to this compose
+      # API auth. Provide these via a .env file next to this compose
       # file, or export them in the host shell. See README "Authentication".
       # Auth is ON by default; the server fails closed (exits) if enabled without
       # a secret + keys file. For a keyless local run set WISMAP_AUTH_ENABLED=false.

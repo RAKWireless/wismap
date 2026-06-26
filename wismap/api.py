@@ -22,7 +22,7 @@ from wismap.extensions import limiter
 
 # ---------------------------------------------------------------------------
 # Logging — surface the app's INFO logs (the boot key-load line and the
-# per-request auth-success `label`, RQ-13) in the container logs. gunicorn
+# per-request auth-success `label`) in the container logs. gunicorn
 # captures stderr, but `wismap.*` loggers default to WARNING with no handler,
 # so configure the namespace explicitly here, before AuthConfig.from_env() runs.
 # Quiet it with WISMAP_LOG_LEVEL=WARNING (denials stay at WARNING regardless).
@@ -51,20 +51,20 @@ app = Flask(__name__, static_folder=_frontend_dist, static_url_path="")
 app.json.sort_keys = False
 
 # Honor X-Forwarded-* from a single trusted front proxy/CDN so rate limiting keys
-# on the real client IP, not the proxy (security 012). No effect when accessed
+# on the real client IP, not the proxy. No effect when accessed
 # directly; assumes exactly one proxy hop in the public deployment.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-# Reject oversized request bodies before JSON parsing (security 012 RQ-05).
+# Reject oversized request bodies before JSON parsing.
 # Werkzeug returns its default 413 page (not the v1 JSON envelope) for this case.
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_CONTENT_LENGTH", 256 * 1024))
 
 CORS(app)
 
 # ---------------------------------------------------------------------------
-# Auth (spec 009) — load the key/secret config once at boot. Fail closed: if
+# Auth — load the key/secret config once at boot. Fail closed: if
 # auth is enabled but misconfigured (missing secret or keys file), exit rather
-# than start in an insecure state (RQ-11). `WISMAP_AUTH_ENABLED=false` is the
+# than start in an insecure state. `WISMAP_AUTH_ENABLED=false` is the
 # explicit local-dev escape hatch.
 # ---------------------------------------------------------------------------
 try:
@@ -91,7 +91,7 @@ _proxy_limit = os.environ.get("RATELIMIT_PROXY", "60/minute")
 # its own (also app-level) before_request. App-level hooks run in registration
 # order, so this guarantees auth is evaluated before any rate-limit check: an
 # unauthenticated /validate or /solve gets a 403 without consuming a limiter
-# bucket (RQ-14). NOTE: a blueprint-level (`@bp.before_request`) gate would run
+# bucket. NOTE: a blueprint-level (`@bp.before_request`) gate would run
 # *after* the limiter's app-level check, so registering here — ahead of
 # init_app — is load-bearing, not stylistic.
 app.before_request(auth_gate)
@@ -176,7 +176,7 @@ def serve_spa(path):
     if path and os.path.isfile(os.path.join(_frontend_dist, path)):
         return send_from_directory(_frontend_dist, path)
     # Otherwise serve index.html (SPA routing). This is the one surface that mints
-    # the browser's session+CSRF cookies (RQ-05/RQ-07) — and only when no valid
+    # the browser's session+CSRF cookies — and only when no valid
     # session cookie is already present, so they stay sticky across reloads.
     index = os.path.join(_frontend_dist, "index.html")
     if os.path.isfile(index):
