@@ -1,0 +1,23 @@
+rak12015:
+  type: WisIO
+  description: RAK12015 Vibration Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12015/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    22: AIN
+    32: OUT (NC)
+    39: GND
+    40: GND
+  category: sensor
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12015/rak12015.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12015/datasheet/schematic.png
+  notes:
+  - Enable OUT signal populating R5
+  tags:
+  - vibration
+  - piezo
+  - analog

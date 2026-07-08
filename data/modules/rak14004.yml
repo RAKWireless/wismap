@@ -1,0 +1,32 @@
+rak14004:
+  type: WisIO
+  description: RAK14004 Keypad Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak14004/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    19: SDA1
+    20: SCL1
+    32: RESET
+    33: RX
+    34: TX
+    38: INT
+    39: GND
+    40: GND
+  i2c_address: '0x5F'
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak14004/rak14004.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak14004/datasheet/u1-mcu.png
+  - https://images.docs.rakwireless.com/wisblock/rak14004/datasheet/i2c-pup.png
+  - https://images.docs.rakwireless.com/wisblock/rak14004/datasheet/j3-debug.png
+  - https://images.docs.rakwireless.com/wisblock/rak14004/datasheet/image-20210728143632190.png
+  - https://images.docs.rakwireless.com/wisblock/rak14004/datasheet/rak14004-sch1.png
+  - https://images.docs.rakwireless.com/wisblock/rak14004/datasheet/rak14004-sch2.png
+  tags:
+  - keypad
+  - input
+  - button
+  - i2c

@@ -1,0 +1,31 @@
+rak13006:
+  type: WisIO
+  description: RAK13006 CAN Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak13006/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    20: SPI_CS (NC)
+    25: SPI_CS
+    26: SPI_CLK
+    27: SPI_MISO
+    28: SPI_MOSI
+    29: CLKO_SF
+    31: SPI_CS (NC)
+    32: INT1
+    37: INT0
+    38: INT
+    39: GND
+    40: GND
+  category: communication
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak13006/rak13006.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak13006/datasheet/can-chip-phy.png
+  - https://images.docs.rakwireless.com/wisblock/rak13006/datasheet/5v-boost.png
+  tags:
+  - can
+  - automotive
+  - industrial
+  - spi

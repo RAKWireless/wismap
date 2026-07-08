@@ -1,0 +1,31 @@
+rak12027:
+  type: WisSensor
+  description: RAK12027 Earthquake Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12027/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    10: INT2
+    12: INT1
+    13: INT1
+    15: INT2
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x55'
+  category: sensor
+  chip: Omron D7S
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12027/rak12027.jpg
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12027/datasheet/rak12027-schem.jpg
+  double: true
+  tags:
+  - earthquake
+  - seismic
+  - vibration
+  - motion
+  - i2c

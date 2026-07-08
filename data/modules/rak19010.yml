@@ -1,0 +1,44 @@
+rak19010:
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak19010/rak19010.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak19010/datasheet/schematic.svg
+  type: WisBase
+  category: base
+  form_factor: normal
+  core_socket: WB_CORE_S1
+  description: RAK19010 Base Board with Power Slot
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak19010/overview/
+  naming:
+    3V3: 3V3
+    3V3_S: 3V3_S
+    AIN1: AIN1
+    BOOT0: BOOT0
+    GND: GND
+    I2C1_SCL: I2C1_SCL
+    I2C1_SDA: I2C1_SDA
+    IO1: IO1
+    IO2: EN
+    RXD0: RXD0
+    TXD0: TXD0
+    VBAT: VBAT
+    VDD: VDD
+  slots:
+    CORE: null
+    POWER: null
+    IO_A: null
+    SENSOR_A:
+      double: true
+      1: UART1_TX
+      24: UART1_RX
+    SENSOR_B: null
+    SENSOR_C:
+      layer: bottom
+    SENSOR_D:
+      double: true
+      1: UART1_TX
+      24: UART1_RX
+      layer: bottom
+  tags:
+  - base-board
+  - power-slot

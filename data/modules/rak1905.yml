@@ -1,0 +1,27 @@
+rak1905:
+  type: WisSensor
+  description: RAK1905 9-Axis Motion Sensor Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak1905/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    12: INT1
+    13: INT1
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x68'
+  category: sensor
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak1905/rak1905.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak1905/datasheet/rak1905-schematic.png
+  tags:
+  - accelerometer
+  - gyroscope
+  - magnetometer
+  - motion
+  - i2c

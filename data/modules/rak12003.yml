@@ -1,0 +1,25 @@
+rak12003:
+  type: WisSensor
+  description: RAK12003 Infrared Temperature Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12003/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x3A'
+  category: sensor
+  chip: Melexis MLX90632
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12003/rak12003.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12003/datasheet/schematic.png
+  tags:
+  - temperature
+  - infrared
+  - ir
+  - i2c

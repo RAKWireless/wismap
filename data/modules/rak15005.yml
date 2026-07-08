@@ -1,0 +1,26 @@
+rak15005:
+  type: WisSensor
+  description: RAK15005 128kB FRAM Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak15005/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    11: 3V3_S
+    12: WP
+    13: WP
+    14: 3V3_S
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x56'
+  category: storage
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak15005/rak15005.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak15005/datasheet/rak15005-schematic.png
+  tags:
+  - fram
+  - storage
+  - memory
+  - i2c

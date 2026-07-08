@@ -8,12 +8,12 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 from rich import print, box
-from mergedeep import merge
 import openpyxl
 import requests
 import inquirer
 import argparse
 import textwrap
+from datetime import datetime
 
 from wismap import __version__
 from wismap.core import (
@@ -28,7 +28,8 @@ from wismap.core import (
 data_folder = "./data"
 definitions_file = f"{data_folder}/definitions.yml"
 config_file = f"{data_folder}/config.yml"
-patches_folder = f"{data_folder}/patches"
+modules_folder = f"{data_folder}/modules"
+import_folder = f"{data_folder}/import"
 spreadsheet_url = "https://downloads.rakwireless.com/LoRa/WisBlock/Pin-Mapper/WisBlock-IO-Pin-Mapper.xlsx"
 spreadsheet_file = f"{data_folder}/WisBlock-IO-Pin-Mapper.xlsx"
 show_nc = False
@@ -296,6 +297,37 @@ def action_combine(*args):
     print(f"Reproduce this configuration: python wismap.py combine {' '.join([v.lower() for k, v in result['slot_module'].items()])}")
 
 # -----------------------------------------------------------------------------
+# Normalization
+# -----------------------------------------------------------------------------
+
+def _normalize(data):
+    for module in data:
+        for key in ('mapping', 'naming'):
+            if key in data[module]:
+                data[module][key] = dict(sorted((k, v) for k, v in data[module][key].items() if v is not None))
+    return dict(sorted(data.items(), key=lambda e: int(re.findall(r"\d+", e[0])[0])))
+
+# -----------------------------------------------------------------------------
+# Action GENERATE
+# -----------------------------------------------------------------------------
+
+def action_generate():
+    data = {}
+    for path in sorted(glob.glob(f"{modules_folder}/*.yml")):
+        with open(path) as f:
+            entry = yaml.load(f, Loader=yaml.loader.SafeLoader) or {}
+        fname_id = os.path.splitext(os.path.basename(path))[0]
+        if list(entry.keys()) != [fname_id]:
+            sys.exit(f"ERROR: {path} must hold exactly one top-level key '{fname_id}'")
+        if fname_id in data:
+            sys.exit(f"ERROR: duplicate module id '{fname_id}'")
+        data.update({k: v for k, v in entry.items() if v is not None})
+    data = _normalize(data)
+    with open(definitions_file, "w") as w:
+        print("Saving definitions")
+        yaml.dump(data, w, sort_keys=False)
+
+# -----------------------------------------------------------------------------
 # Action IMPORT
 # -----------------------------------------------------------------------------
 
@@ -363,7 +395,7 @@ def import_sheet(data, sheet):
         data[module_code]['i2c_address'] = matches if len(matches) > 1 else matches[0]
 
 
-def action_import(patch=True):
+def action_import():
 
     skip_sheets = ["Pin Mapper", "model list", "NA IO", "NA_SENS"]
 
@@ -396,37 +428,21 @@ def action_import(patch=True):
             sheet = wb[sheet_name]
             import_sheet(data, sheet)
 
-    # Apply patches
-    if patch:
-
-        # Load patch files
-        patches = {}
-        for patch_file in sorted(glob.glob(f"{patches_folder}/*.yml")):
-            with open(patch_file) as f:
-                patch = yaml.load(f, Loader=yaml.loader.SafeLoader)
-                if patch:
-                    patches.update({k: v for k, v in patch.items() if v is not None})
-
-        # Apply
-        if len(patches.keys()):
-            print("Applying patches")
-            data = merge(data, patches)
-
     # Filter & sort mappings
     print("Filtering and sorting")
-    for module in data:
-        for key in ('mapping', 'naming'):
-            if key in data[module]:
-                data[module][key] = dict(sorted([(k, v) for k, v in data[module][key].items() if v is not None ]))
-    data = dict(sorted(data.items(), key=lambda e: int(re.findall(r"\d+", e[0])[0])))
+    data = _normalize(data)
 
     # Resume
     print(f"Final list has {len(data.keys())} products")
 
-    # Save
-    with open(definitions_file, "w") as w:
-        print("Saving definitions")
+    # Save a timestamped raw snapshot for upstream-diffing (never overwrite definitions.yml)
+    os.makedirs(import_folder, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    snapshot = f"{import_folder}/{stamp}.yml"
+    with open(snapshot, "w") as w:
+        print(f"Saving raw snapshot to {snapshot}")
         yaml.dump(data, w, sort_keys=False)
+    print(f"Wrote raw snapshot {snapshot} — diff two snapshots to spot upstream changes.")
 
 # -----------------------------------------------------------------------------
 # Action CLEAN
@@ -448,6 +464,7 @@ ACTIONS = {
     "info" : action_info,
     "combine" : action_combine,
     "import" : action_import,
+    "generate" : action_generate,
     "clean" : action_clean,
 }
 

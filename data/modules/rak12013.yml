@@ -1,0 +1,23 @@
+rak12013:
+  type: WisIO
+  description: RAK12013 3GHz Radar Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12013/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    31: OUT
+    32: EN
+    39: GND
+    40: GND
+  category: sensor
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12013/rak12013.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12013/datasheet/rak12013-schematic.png
+  tags:
+  - radar
+  - microwave
+  - presence
+  - motion
+  - gpio

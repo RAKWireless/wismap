@@ -1,0 +1,25 @@
+rak13004:
+  type: WisIO
+  description: RAK13004 PWM Expander Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak13004/overview/
+  mapping:
+    3: GND
+    4: GND
+    5: 3V3
+    6: 3V3_S
+    19: SDA1
+    20: SCL1
+    38: OE
+    39: GND
+    40: GND
+  i2c_address: '0x47'
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak13004/rak13004.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak13004/datasheet/rak13004-schematic.png
+  - https://images.docs.rakwireless.com/wisblock/rak13004/datasheet/device-adress-a2-a0.png
+  tags:
+  - pwm
+  - servo
+  - i2c

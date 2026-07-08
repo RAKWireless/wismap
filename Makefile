@@ -20,6 +20,9 @@ freeze: .venv/touchfile
 import: .venv/touchfile
 	set -e ; . .venv/bin/activate ; python wismap.py import
 
+generate: .venv/touchfile
+	set -e ; . .venv/bin/activate ; python wismap.py generate
+
 list: .venv/touchfile
 	set -e ; . .venv/bin/activate ; python wismap.py list
 
@@ -76,5 +79,5 @@ docker-up:
 docker-down:
 	docker compose down
 
-.PHONY: clean freeze import serve check-openapi frontend-install frontend-dev frontend-build docker-build docker-run docker-up docker-down
+.PHONY: clean freeze import generate serve check-openapi frontend-install frontend-dev frontend-build docker-build docker-run docker-up docker-down
 

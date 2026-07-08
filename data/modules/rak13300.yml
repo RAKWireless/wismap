@@ -1,0 +1,36 @@
+rak13300:
+  type: WisIO
+  description: RAK13300 LoRa Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak13300/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    24: SPI_NSS (NC)
+    25: SPI_NSS
+    26: SPI_CLK
+    27: SPI_MISO
+    28: SPI_MOSI
+    29: SPI_NSS (NC)
+    31: ANT_SW
+    32: RESET
+    37: BUSY
+    38: DIO1
+    39: GND
+    40: GND
+  category: communication
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak13300/rak13300.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak13300/datasheet/pinout.png
+  - https://images.docs.rakwireless.com/wisblock/rak13300/datasheet/oscillator.png
+  - https://images.docs.rakwireless.com/wisblock/rak13300/datasheet/sx162.png
+  - https://images.docs.rakwireless.com/certification/ce.png
+  - https://images.docs.rakwireless.com/certification/fcc.png
+  - https://images.docs.rakwireless.com/certification/ised.png
+  - https://images.docs.rakwireless.com/certification/ukca.png
+  notes:
+  - Remap SPI_NSS signal modifying resistors R2, R13 and R14
+  tags:
+  - lora
+  - spi

@@ -1,0 +1,25 @@
+rak18001:
+  type: WisSensor
+  description: RAK18001 Buzzer Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak18001/overview/
+  mapping:
+    2: GND
+    9: 3V3
+    10: PWM1 (NC)
+    12: PWM2
+    13: PWM2
+    15: PWM1 (NC)
+    16: 3V3
+    23: GND
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak18001/rak18001.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak18001/datasheet/schematic.png
+  notes:
+  - R6 enables PWM2 (default), R5 enables PWM1
+  tags:
+  - buzzer
+  - audio
+  - alert
+  - pwm

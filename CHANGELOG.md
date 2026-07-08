@@ -4,6 +4,36 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
+## 0.6.0 — 2026-07-08
+
+WisMAP's own data becomes the source of truth — the module catalog is decoupled
+from the upstream RAK Pin-Mapper spreadsheet (spec 014).
+
+### Added
+
+* **`make generate` (`python wismap.py generate`)** — rebuilds `data/definitions.yml`
+  by merging the per-module files under the new `data/modules/` directory. The
+  generated catalog is byte-identical to the previous spreadsheet-plus-patch build,
+  so runtime, the `/api/v1/*` contract, the CLI, and the frontend are unchanged.
+
+### Changed
+
+* **The module catalog is now authored as one full file per module under
+  `data/modules/<id>.yml`** (141 files), replacing the spreadsheet-plus-partial-patch
+  model. These files are the editable source of truth: edit a module and run
+  `make generate` to refresh `data/definitions.yml`.
+* **`make import` no longer overwrites `data/definitions.yml`.** It now writes a raw,
+  un-patched snapshot of the upstream spreadsheet to
+  `data/import/<YYYYMMDD_HHMMSS>.yml`. Diff two snapshots to spot upstream changes
+  and hand-apply them to `data/modules/` — a transitional aid until the spreadsheet
+  is retired.
+
+### Removed
+
+* **`data/patches/`** — the partial-overlay patch files are gone; each one's content
+  is folded into the full `data/modules/*.yml` definition.
+
+
 ## 0.5.2 — 2026-06-25
 
 API authentication for the compute-bound endpoints.

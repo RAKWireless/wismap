@@ -1,0 +1,27 @@
+rak1902:
+  type: WisSensor
+  description: RAK1902 Barometer Pressure Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak1902/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    12: INT1
+    13: INT1
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x5C'
+  category: sensor
+  chip: STMicroelectronics LPS22HB
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak1902/rak1902.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak1902/datasheet/rak1902-schematics.png
+  tags:
+  - pressure
+  - barometer
+  - environmental
+  - i2c

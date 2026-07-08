@@ -1,0 +1,71 @@
+rak19011:
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak19011/rak19011.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak19011/datasheet/schematic1.png
+  - https://images.docs.rakwireless.com/wisblock/rak19011/datasheet/schematic2.png
+  type: WisBase
+  category: base
+  form_factor: large
+  core_socket: WB_CORE_S1
+  description: RAK19011 Dual IO Base Board with Power Slot
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak19011/overview/
+  naming:
+    3V3: 3V3
+    3V3_S: 3V3_S
+    AIN0: AIN0
+    BOOT0: BOOT0
+    GND: GND
+    I2C1_SCL: I2C1_SCL
+    I2C1_SDA: I2C1_SDA
+    I2C2_SCL: I2C2_SCL
+    I2C2_SDA: I2C2_SDA
+    IO1: IO1
+    IO2: EN
+    IO3: IO3
+    IO4: IO4
+    IO5: IO5
+    IO6: IO6
+    IO7: IO7
+    IO8: IO8
+    LED1: LED1
+    LED2: LED2
+    RXD0: RXD0
+    RXD1: RXD1
+    SPI_CLK: SPI_CLK
+    SPI_CS: SPI_CS
+    SPI_MISO: SPI_MISO
+    SPI_MOSI: SPI_MOSI
+    SW1: SW1
+    TXD0: TXD0
+    TXD1: TXD1
+    USB+: USB+
+    USB-: USB-
+    VBUS: VBUS
+    VDD: VDD
+  slots:
+    CORE: null
+    POWER: null
+    IO_A: null
+    IO_B: null
+    SENSOR_A:
+      double: true
+      double_blocks: SENSOR_B
+    SENSOR_B: null
+    SENSOR_C:
+      double: true
+      double_blocks: SENSOR_D
+      layer: bottom
+    SENSOR_D:
+      layer: bottom
+    SENSOR_E:
+      double: true
+    SENSOR_F:
+      double: true
+      layer: bottom
+  notes:
+  - AIN0 is connected to battery (ADC_VBAT)
+  tags:
+  - base-board
+  - dual-io
+  - power-slot

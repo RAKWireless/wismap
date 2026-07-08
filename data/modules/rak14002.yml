@@ -1,0 +1,24 @@
+rak14002:
+  type: WisIO
+  description: RAK14002 Touch Button Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak14002/overview/
+  mapping:
+    3: GND
+    4: GND
+    5: 3V3
+    19: SDA1
+    20: SCL1
+    38: ALERT
+    39: GND
+    40: GND
+  i2c_address: '0x28'
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak14002/rak14002.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak14002/datasheet/rak14002-schematic.png
+  tags:
+  - touch
+  - button
+  - input
+  - i2c

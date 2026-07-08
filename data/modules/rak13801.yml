@@ -1,0 +1,39 @@
+rak13801:
+  type: WisIO
+  description: RAK13801 UWB Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak13801/overview/
+  mapping:
+    1: VBAT
+    2: VBAT
+    3: GND
+    4: GND
+    19: IRQ (NC)
+    20: RSTn (NC)
+    25: SPI_CS
+    26: SPI_CLK
+    27: SPI_MISO
+    28: SPI_MOSI
+    29: SPI_CS (NC)
+    30: EN (NC)
+    31: Wakeup
+    32: Wakeup (NC)
+    37: IRQ
+    38: RSTn
+    39: GND
+    40: GND
+  category: communication
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak13801/rak13801.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak13801/datasheet/rak13801-schem.jpg
+  notes:
+  - Change SPI_CS line swapping resistors R5 and R9
+  - Change IRQ line swapping resistors R2 and R12
+  - Change RSTn line swapping resistors R3 and R13
+  - Change Wakeup line swapping resistors R10 and R11
+  - Populate R19 to control power via EN signal
+  tags:
+  - uwb
+  - ranging
+  - positioning
+  - spi

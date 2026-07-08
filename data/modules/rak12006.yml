@@ -1,0 +1,24 @@
+rak12006:
+  type: WisIO
+  description: RAK12006 PIR Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12006/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    18: 3V3
+    38: OUT
+    39: GND
+    40: GND
+  category: sensor
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12006/rak12006.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12006/datasheet/rak12006-schematic.png
+  notes:
+  - Switch between 3V3 and 3V3_S swapping resistors in R1 and R2
+  tags:
+  - pir
+  - motion
+  - presence
+  - gpio

@@ -1,0 +1,41 @@
+rak18080:
+  type: WisIO
+  description: RAK18080 Audio DSP Board Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak18080/overview/
+  mapping:
+    1: VBAT
+    2: VBAT
+    3: GND
+    4: GND
+    5: 3V3 (NC)
+    6: 3V3_S
+    9: VBUS
+    11: TXD (DSP_UART_RX)
+    12: RXD (DSP_UART_TX)
+    13: RESET
+    19: I2C1_SDA
+    20: I2C1_SCL
+    25: SPI_CS
+    26: SPI_CLK
+    27: SPI_MISO
+    28: SPI_MOSI
+    29: DB_INT1(IO1)
+    31: DB_READY(IO3)
+    35: I2S_DO (DSP_DO)
+    36: I2S_DI (DSP_DI)
+    37: I2S_BCLK
+    38: I2S_WS
+    39: GND
+    40: GND
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak18080/rak18080.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak18080/datasheet/rak18080_wisblock_connector_interposer_power_supply.png
+  notes:
+  - Change from 3V3_S to 3V3 by swapping resistors R1 and R2
+  tags:
+  - dsp
+  - audio
+  - processing
+  - i2s

@@ -1,0 +1,29 @@
+rak12002:
+  type: WisSensor
+  description: RAK12002 RTC Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12002/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: 3V3
+    10: INT1
+    12: CLKOUT
+    13: CLKOUT
+    15: INT1
+    16: 3V3
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x52'
+  category: sensor
+  chip: Micro Crystal RV-3028
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12002/rak12002.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12002/datasheet/schematic_diagram.png
+  tags:
+  - rtc
+  - clock
+  - timing
+  - i2c

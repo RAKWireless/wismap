@@ -1,0 +1,23 @@
+rak18032:
+  type: WisIO
+  description: RAK18032 Audio Ultrasonic Microphone Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak18032/overview/
+  mapping:
+    3: GND
+    4: GND
+    5: 3V3
+    29: MIC_CTR(IO1)
+    31: MIC_PDM1_DATA
+    32: MIC_PDM1_CLK
+    39: GND
+    40: GND
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak18032/rak18032.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak18032/datasheet/rak18032-schem.png
+  tags:
+  - microphone
+  - audio
+  - ultrasonic
+  - pdm

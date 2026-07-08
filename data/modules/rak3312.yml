@@ -1,0 +1,64 @@
+rak3312:
+  type: WisCore
+  description: RAK3312 ESP32-S3 LoRaWAN
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak3312/overview/
+  mapping:
+    1: VBAT_1
+    2: VBAT_2
+    3: GND
+    4: GND
+    5: VDD
+    6: VDD
+    7: USB+
+    8: USB-
+    9: VBUS
+    10: SW1
+    11: TXD0
+    12: RXD0
+    13: RESET
+    14: GPIO46
+    15: GPIO45
+    16: LED3
+    17: VDD
+    18: VDD
+    19: GPIO9
+    20: GPIO40
+    21: GPIO1
+    22: GPIO2
+    23: BOOT
+    24: IO7
+    25: GPIO12
+    26: GPIO13
+    27: GPIO10
+    28: GPIO11
+    29: GPIO21
+    30: GPIO14
+    31: GPIO41
+    32: GPIO42
+    33: GPIO44
+    34: GPIO43
+    35: GPIO17
+    36: GPIO18
+    37: GPIO38
+    38: GPIO39
+    39: GND
+    40: GND
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak3312/rak3312.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak3312/rak3312-schematic.svg
+  category: core
+  mcu: Espressif ESP32-S3
+  lora_chip: Semtech LR1121
+  power_pins:
+    3V3_S_control: GPIO14
+  tags:
+  - lorawan
+  - lora
+  - esp32
+  - wifi
+  - ble
+  - microcontroller
+  - spi
+  - i2c
+  - uart

@@ -1,0 +1,39 @@
+rak18060:
+  type: WisIO
+  description: RAK18060 Audio Stereo Amplifier Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak18060/overview/
+  mapping:
+    1: VBAT
+    2: VBAT
+    3: GND
+    4: GND
+    5: 3V3 (NC)
+    6: 3V3_S
+    9: VBUS
+    13: RESET
+    19: I2C1_SDA
+    20: I2C1_SCL
+    29: AMP_INT(IO1)
+    35: I2S_DO (AMP_DO)
+    36: I2S_DI (AMP_DI)
+    37: I2S_BCLK
+    38: I2S_WS
+    39: GND
+    40: GND
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak18060/rak18060.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak18060/datasheet/rak18060_wisblock_board_connector_power_select.png
+  - https://images.docs.rakwireless.com/wisblock/rak18060/datasheet/rak18060_left_right_channel.png
+  i2c_address:
+  - '0x4C'
+  - '0x4F'
+  notes:
+  - Change from 3V3_S to 3V3 by swapping resistors R1 and R2
+  tags:
+  - amplifier
+  - audio
+  - speaker
+  - stereo
+  - i2s

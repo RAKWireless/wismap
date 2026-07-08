@@ -1,0 +1,26 @@
+rak1903:
+  type: WisSensor
+  description: RAK1903 Ambient Light Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak1903/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    12: INT1
+    13: INT1
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x44'
+  category: sensor
+  chip: Texas Instruments OPT3001
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak1903/rak1903.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak1903/datasheet/rak1903-schematic.png
+  tags:
+  - light
+  - ambient-light
+  - i2c

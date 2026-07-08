@@ -1,0 +1,118 @@
+rak6421:
+  images:
+  - https://images.docs.rakwireless.com/wishat/rak6421/rak6421.png
+  schematics:
+  - https://images.docs.rakwireless.com/wishat/rak6421/datasheet/rak6421-schematic-1.png
+  - https://images.docs.rakwireless.com/wishat/rak6421/datasheet/rak6421-schematic-2.png
+  type: WisBase
+  category: base
+  form_factor: normal
+  core_socket: null
+  description: RAK6421 Pi Hat
+  functions: raspberry
+  documentation: https://docs.rakwireless.com/product-categories/wishat/rak6421-wisblock-pi-hat/overview/
+  i2c_address: '0x48'
+  naming:
+    3V3: 3V3
+    5V: 5V
+    AIN1: AIN1
+    GND: GND
+    GPIO04: GPIO04
+    GPIO05: GPIO05
+    I2C1_SCL: I2C1_SCL
+    I2C1_SDA: I2C1_SDA
+    UART0_RX: RXD0
+    UART0_TX: TXD0
+    VBAT: VBAT
+  slots:
+    IO_A:
+      6: 3V3
+      7: NC
+      8: NC
+      9: 5V
+      10: NC
+      11: GPIO4
+      12: GPIO5
+      13: GPIO27
+      14: NC
+      15: NC
+      16: NC
+      17: 3V3
+      18: 3V3
+      21: AIN0
+      22: AIN1
+      25: SPI_CS0
+      29: GPIO17
+      30: GPIO12
+      31: GPIO13
+      32: GPIO16
+      33: UART0_TX
+      34: UART0_RX
+      35: I2C1_SDA
+      36: I2C1_SCL
+      37: GPIO24
+      38: GPIO22
+      39: GND
+      40: GND
+    IO_B:
+      6: 3V3
+      7: NC
+      8: NC
+      9: 5V
+      10: NC
+      11: UART0_TX
+      12: UART0_RX
+      13: GPIO27
+      14: NC
+      15: NC
+      16: NC
+      17: 3V3 - GPIO00
+      18: 3V3
+      21: AIN2
+      22: AIN3
+      25: SPI_CS1
+      29: GPIO25
+      30: GPIO26
+      31: GPIO23
+      32: GPIO24
+      33: TXD0
+      34: RXD0
+      35: GPIO21
+      36: GPIO20
+      37: GPIO19
+      38: GPIO18
+    SENSOR_A:
+      1: UART0_TX
+      3: SPI_CS0
+      10: GPIO12
+      11: 3V3
+      12: GPIO6
+      14: 3V3
+      24: UART0_RX
+      double: true
+    SENSOR_B:
+      3: SPI_CS0
+      10: GPIO16
+      11: 3V3
+      12: GPIO13
+      14: 3V3
+    SENSOR_C:
+      3: SPI_CS1
+      10: GPIO22
+      11: 3V3
+      12: GPIO21
+      14: 3V3
+      double: true
+      double_blocks: SENSOR_D
+    SENSOR_D:
+      1: UART0_TX
+      3: SPI_CS1
+      10: GPIO24
+      11: 3V3
+      12: GPIO23
+      14: 3V3
+      24: UART0_RX
+  tags:
+  - raspberry-pi
+  - hat
+  - adapter

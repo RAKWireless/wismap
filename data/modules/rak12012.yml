@@ -1,0 +1,27 @@
+rak12012:
+  type: WisIO
+  description: RAK12012 Heart Rate Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12012/overview/
+  mapping:
+    3: GND
+    4: GND
+    6: 3V3_S
+    19: I2C_SDA
+    20: I2C_SCL
+    32: INT
+    39: GND
+    40: GND
+  i2c_address: '0x57'
+  category: sensor
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12012/rak12012.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12012/datasheet/power_supply.png
+  - https://images.docs.rakwireless.com/wisblock/rak12012/datasheet/voltage_level.png
+  - https://images.docs.rakwireless.com/wisblock/rak12012/datasheet/max30102.png
+  - https://images.docs.rakwireless.com/wisblock/rak12012/datasheet/wisconnector.png
+  tags:
+  - heart-rate
+  - health
+  - biometric
+  - i2c

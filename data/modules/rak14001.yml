@@ -1,0 +1,26 @@
+rak14001:
+  type: WisIO
+  description: RAK14001 RGB LED Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak14001/overview/
+  mapping:
+    1: VBAT
+    2: VBAT
+    3: GND
+    4: GND
+    5: 3V3
+    19: SDA1
+    20: SCL1
+    38: EN
+    39: GND
+    40: GND
+  i2c_address: '0x38'
+  category: display
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak14001/rak14001.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak14001/datasheet/rak14001-schematic.png
+  tags:
+  - led
+  - rgb
+  - lighting
+  - i2c

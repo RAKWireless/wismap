@@ -1,0 +1,56 @@
+rak19001:
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak19001/rak19001.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak19001/datasheet/schematic1.png
+  - https://images.docs.rakwireless.com/wisblock/rak19001/datasheet/schematic2.png
+  - https://images.docs.rakwireless.com/wisblock/rak19001/datasheet/schematic3.png
+  type: WisBase
+  category: base
+  form_factor: large
+  core_socket: WB_CORE_S1
+  description: RAK19001 Dual IO Base Board
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak19001/overview/
+  naming:
+    3V3: 3V3
+    3V3_S: 3V3_S
+    AIN0: ADC_VBAT
+    BOOT0: BOOT0
+    GND: GND
+    I2C1_SCL: I2C1_SCL
+    I2C1_SDA: I2C1_SDA
+    IO2: EN
+    LED1: LED1
+    LED2: LED2
+    RESET: RESET
+    RXD1: RXD1
+    TXD1: TXD1
+    USB+: USB_P
+    USB-: USB_N
+    VBAT: VBAT
+    VDD: VDD
+    VIN: VIN
+  slots:
+    CORE: null
+    IO_A: null
+    IO_B: null
+    SENSOR_A:
+      double: true
+      double_blocks: SENSOR_B
+    SENSOR_B: null
+    SENSOR_C:
+      double: true
+      double_blocks: SENSOR_D
+      layer: bottom
+    SENSOR_D:
+      layer: bottom
+    SENSOR_E:
+      double: true
+    SENSOR_F:
+      double: true
+      layer: bottom
+  notes:
+  - AIN0 is connected to battery (ADC_VBAT)
+  tags:
+  - base-board
+  - dual-io

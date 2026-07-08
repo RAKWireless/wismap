@@ -1,0 +1,28 @@
+rak12014:
+  type: WisSensor
+  description: RAK12014 Laser ToF Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12014/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    10: SHUT
+    11: 3V3_S
+    12: INT
+    13: INT
+    14: 3V3_S
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x52'
+  category: sensor
+  chip: STMicroelectronics VL53L0X
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12014/rak12014.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12014/datasheet/schematic.png
+  tags:
+  - distance
+  - tof
+  - laser
+  - i2c

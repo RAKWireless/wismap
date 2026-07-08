@@ -1,0 +1,23 @@
+rak18000:
+  type: WisIO
+  description: RAK18000 Stereo Microphone Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak18000/overview/
+  mapping:
+    3: GND
+    4: GND
+    5: 3V3
+    31: DMIC1
+    32: DMICLK
+    39: GND
+    40: GND
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak18000/rak18000.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak18000/datasheet/wisio-connection.png
+  - https://images.docs.rakwireless.com/wisblock/rak18000/datasheet/digital-microphone.png
+  tags:
+  - microphone
+  - audio
+  - stereo
+  - pdm

@@ -1,0 +1,33 @@
+rak12004:
+  type: WisIO
+  description: RAK12004 MQ2 Gas Sensor Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12004/overview/
+  mapping:
+    1: VBAT
+    2: VBAT
+    3: GND
+    4: GND
+    5: 3V3
+    19: I2C_SDA
+    20: I2C_SCL
+    37: ALERT
+    38: EN
+    39: GND
+    40: GND
+  i2c_address: '0x51'
+  category: sensor
+  chip: Winsen MQ-2
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak12004/rak12004.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak12004/datasheet/power-supply.png
+  - https://images.docs.rakwireless.com/wisblock/rak12004/datasheet/gas-detector-circuit.png
+  - https://images.docs.rakwireless.com/wisblock/rak12004/datasheet/voltage-level-shifter.png
+  - https://images.docs.rakwireless.com/wisblock/rak12004/datasheet/i2c-address.png
+  - https://images.docs.rakwireless.com/wisblock/rak12004/datasheet/j2-connector.png
+  - https://images.docs.rakwireless.com/wisblock/rak12004/datasheet/wisconnector.png
+  tags:
+  - gas
+  - smoke
+  - lpg
+  - analog

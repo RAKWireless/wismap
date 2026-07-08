@@ -1,0 +1,29 @@
+rak5814:
+  type: WisSensor
+  description: RAK5814 Crypto Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak5814/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    10: RESET
+    15: RESET
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  category: io
+  chip: Microchip ATECC608A
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak5814/rak5814.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak5814/datasheet/rak5814_schematic.png
+  i2c_address: '0x60'
+  notes:
+  - I2C address can be changed programmatically
+  tags:
+  - crypto
+  - security
+  - encryption
+  - i2c

@@ -1,0 +1,26 @@
+rak17000:
+  type: WisIO
+  description: RAK17000 Motor Drive Module
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak17000/overview/
+  mapping:
+    1: VBAT
+    2: VBAT
+    3: GND
+    4: GND
+    25: AIN2
+    26: AIN1
+    28: BIN2
+    31: BIN1
+    38: nSLEEP
+    39: GND
+    40: GND
+  category: io
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak17000/rak17000.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak17000/datasheet/schematic.png
+  tags:
+  - motor
+  - dc-motor
+  - actuator
+  - i2c

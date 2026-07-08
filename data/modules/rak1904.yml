@@ -1,0 +1,28 @@
+rak1904:
+  type: WisSensor
+  description: RAK1904 3-Axis Acceleration Sensor
+  documentation: https://docs.rakwireless.com/product-categories/wisblock/rak1904/overview/
+  mapping:
+    2: GND
+    7: I2C_SCL
+    8: I2C_SDA
+    9: VDD
+    10: INT2
+    12: INT1
+    13: INT1
+    15: INT2
+    16: VDD
+    17: I2C_SDA
+    18: I2C_SCL
+    23: GND
+  i2c_address: '0x18'
+  category: sensor
+  chip: STMicroelectronics LIS3DH
+  images:
+  - https://images.docs.rakwireless.com/wisblock/rak1904/rak1904.png
+  schematics:
+  - https://images.docs.rakwireless.com/wisblock/rak1904/datasheet/rak1904-schematics.png
+  tags:
+  - accelerometer
+  - motion
+  - i2c
