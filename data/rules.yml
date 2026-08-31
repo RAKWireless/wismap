@@ -1,60 +1,44 @@
-# Conflict detection rules for WisBlock module combinations.
-# Each rule is evaluated against the function_slot table after
-# skip_columns are removed (only competing slots remain).
-#
-# Condition types:
-#   duplicates    — non_empty > unique (same value used by multiple slots)
-#   any_used      — non_empty > 0 (at least one slot uses this function)
-#   multiple_used — non_empty > 1 (more than one slot uses this function)
-#
-# Template variables in `description`:
-#   {function} — the matched function name (e.g. "IO3", "UART1_TX")
-
 rules:
-
-  - name: i2c_address_conflict
-    code: i2c_address_collision
-    severity: error
-    description: "Possible conflict with I2C addresses"
-    match:
-      function: I2C_ADDR
-      condition: duplicates
-
-  - name: ain0_adc_vbat
-    code: pin_contention
-    severity: warning
-    description: "Possible conflict with ADC_VBAT if using AIN0"
-    match:
-      function: AIN0
+- code: i2c_address_collision
+  description: Possible conflict with I2C addresses
+  match:
+    condition: duplicates
+    function: I2C_ADDR
+  name: i2c_address_conflict
+  severity: error
+- code: pin_contention
+  description: Possible conflict with ADC_VBAT if using AIN0
+  exclude:
+  - rak6421
+  match:
+    condition: any_used
+    function: AIN0
+  name: ain0_adc_vbat
+  severity: warning
+- code: pin_contention
+  description: Possible conflict with {function}
+  match:
+    condition: multiple_used
+    function_prefix:
+    - IO
+    - AIN
+    - GPIO
+    - UART
+    - LED
+    - SW
+    - SPI_CS
+  name: exclusive_signal
+  severity: error
+- code: power_pin_conflict
+  description: Possible conflict with 3V3_S enable signal if using IO2
+  highlights:
+  - IO2
+  - 3V3_S
+  match:
+    also_requires:
       condition: any_used
-    exclude:
-      - rak6421
-
-  - name: exclusive_signal
-    code: pin_contention
-    severity: error
-    description: "Possible conflict with {function}"
-    match:
-      function_prefix:
-        - IO
-        - AIN
-        - GPIO
-        - UART
-        - LED
-        - SW
-        - SPI_CS
-      condition: multiple_used
-
-  - name: io2_3v3s_enable
-    code: power_pin_conflict
-    severity: warning
-    description: "Possible conflict with 3V3_S enable signal if using IO2"
-    match:
-      function: IO2
-      condition: any_used
-      also_requires:
-        function: 3V3_S
-        condition: any_used
-    highlights:
-      - IO2
-      - 3V3_S
+      function: 3V3_S
+    condition: any_used
+    function: IO2
+  name: io2_3v3s_enable
+  severity: warning

@@ -14,37 +14,109 @@ from mergedeep import merge
 # Constants
 # -----------------------------------------------------------------------------
 
-PINS_PER_TYPE = {
-    'Accessories': 0,
-    'WisBase': 0,
-    'WisCore': 40,
-    'WisIO': 40,
-    'WisModule': 0,
-    'WisPower': 40,
-    'WisSensor': 24,
-}
+# Column header for the base board's own column in a pin-mapping table. The
+# base board hosts the slots and is not one of them, so its header is stated
+# here rather than looked up in the slot catalogue. It previously lived in a
+# dict named SLOT_NAMES next to the real slots, which is how a base board came
+# to be presented to customers as a slot.
+BASE_COLUMN_LABEL = 'Base board'
 
-SLOT_NAMES = {
-    'BASE': 'Base board',
-    'CORE': 'Core module',
-    'SENSOR_A': 'SENSOR_A slot',
-    'SENSOR_B': 'SENSOR_B slot',
-    'SENSOR_C': 'SENSOR_C slot',
-    'SENSOR_D': 'SENSOR_D slot',
-    'SENSOR_E': 'SENSOR_E slot',
-    'SENSOR_F': 'SENSOR_F slot',
-    'IO_A': 'IO_A slot',
-    'IO_B': 'IO_B slot',
-    'POWER': 'Power slot',
-}
 
-SLOT_ORDER = ['CORE', 'POWER', 'IO_A', 'IO_B',
-              'SENSOR_A', 'SENSOR_B', 'SENSOR_C', 'SENSOR_D',
-              'SENSOR_E', 'SENSOR_F']
+class SlotCatalogue:
+    """What a slot is, read from `config.yml`'s `slot_info` block.
+
+    Every fact here — a slot's customer-facing label, the module type it
+    accepts, its display order, its pin count — used to be hardcoded in this
+    file, as a label table, a slot-name-prefix if/elif chain, an order list,
+    and a pins-per-type dict. All four are now authored once in
+    wisblock-data's `globals/slots.yml` and emitted into `config.yml`, so
+    adding a slot or renaming one for customers is a data change upstream
+    and needs no edit here.
+
+    The rule this class exists to enforce: a slot identifier is a key, not a
+    name. `SENSOR_A` is not "SENSOR_A slot" and cannot be turned into "Sensor
+    Slot A" by string surgery; ask for the `label`. Likewise a slot accepts
+    what its `accepts` says it accepts, not what its prefix suggests.
+    """
+
+    def __init__(self, slot_info=None):
+        self._slots = dict(slot_info or {})
+
+    def load(self, slot_info):
+        """Replace the catalogue's contents in place.
+
+        In place, not by rebinding the module-level `SLOTS`: a caller that did
+        `from wismap.core import SLOTS` before the data was loaded would keep
+        a reference to the old, empty catalogue forever and silently render
+        every slot as its raw identifier.
+        """
+        self._slots = dict(slot_info or {})
+
+    def __contains__(self, slot_name):
+        return slot_name in self._slots
+
+    def names(self):
+        """Every known slot, in canonical display order."""
+        return sorted(self._slots, key=self.sort_index)
+
+    def label(self, slot_name):
+        """Customer-facing name of the receptacle, e.g. `Sensor Slot A`.
+
+        Falls back to the raw identifier for a slot the catalogue does not
+        define — visibly wrong rather than silently plausible, so a missing
+        entry shows up as the bug it is instead of being papered over with a
+        reconstructed name.
+        """
+        return (self._slots.get(slot_name) or {}).get('label') or slot_name
+
+    def accepts(self, slot_name):
+        """The module `type` that fits this slot, or None if unknown."""
+        return (self._slots.get(slot_name) or {}).get('accepts')
+
+    def sort_index(self, slot_name):
+        """Position in canonical display order; unknown slots sort last."""
+        order = (self._slots.get(slot_name) or {}).get('order')
+        return (1, 0, slot_name) if order is None else (0, order, slot_name)
+
+    def pins_for_type(self, module_type):
+        """Pin count of the connector a `module_type` plugs into, or 0 if it
+        does not plug into a slot at all (WisBase, and the catalogue-bucket
+        types that carry no connector)."""
+        for body in self._slots.values():
+            if (body or {}).get('accepts') == module_type:
+                return (body or {}).get('pins') or 0
+        return 0
+
+
+# Populated by `load_data` from config.yml. Module-level because both entry
+# points (wismap.py, wismap/api.py) load the data set once at import and treat
+# it as process-wide; an empty catalogue before that load degrades to raw
+# identifiers rather than raising.
+SLOTS = SlotCatalogue()
 
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
+
+def _slot_accepted_types():
+    """Every module type some slot accepts — the types that can be placed at
+    all. Was a hardcoded type -> slot-name-prefix table."""
+    return {t for t in (SLOTS.accepts(n) for n in SLOTS.names()) if t}
+
+
+def _column_label(key):
+    """Header for one column of a pin-mapping table.
+
+    The columns are the base board followed by one per occupied slot, so the
+    keys are not all slots: `BASE` names the host that carries the slots.
+    Labelling it through the slot catalogue is what made a base board read as
+    a slot, so it is handled explicitly here and the catalogue answers only
+    for real slots.
+    """
+    if key == 'BASE':
+        return BASE_COLUMN_LABEL
+    return SLOTS.label(key)
+
 
 def _normalize_i2c_address(value):
     """Normalize i2c_address to a list or None."""
@@ -79,6 +151,11 @@ def load_data(data_folder="./data"):
         with open(rules_file) as f:
             rules_data = yaml.load(f, Loader=yaml.loader.SafeLoader)
             rules = rules_data.get('rules', []) if rules_data else []
+
+    # config.yml's `slot_info` is the slot catalogue; a config without it
+    # (an older data drop) leaves SLOTS empty, and slot labels degrade to raw
+    # identifiers rather than to a wrong name.
+    SLOTS.load(config.get('slot_info'))
 
     return definitions, config, rules
 
@@ -135,7 +212,7 @@ def get_module_info(definitions, config, module_id, show_nc=False):
 
     # Mapping table
     if 'mapping' in mod:
-        pins = PINS_PER_TYPE.get(mod['type'], 0)
+        pins = SLOTS.pins_for_type(mod['type'])
         mapping_rows = []
         if pins == 0:
             for k, v in mod['mapping'].items():
@@ -416,7 +493,7 @@ def get_base_slots(definitions, config, base_id):
     result = {}
 
     sorted_slots = sorted(base['slots'].items(),
-                          key=lambda x: SLOT_ORDER.index(x[0]) if x[0] in SLOT_ORDER else len(SLOT_ORDER))
+                          key=lambda x: SLOTS.sort_index(x[0]))
 
     for slot_name, slot_overrides in sorted_slots:
         slot_overrides = slot_overrides or {}
@@ -425,16 +502,8 @@ def get_base_slots(definitions, config, base_id):
         double_blocks = slot_overrides.get('double_blocks', None)
 
         # Determine accepted types
-        if slot_name.startswith('CORE'):
-            accepts_types = ['WisCore']
-        elif slot_name.startswith('SENSOR'):
-            accepts_types = ['WisSensor']
-        elif slot_name.startswith('IO'):
-            accepts_types = ['WisIO']
-        elif slot_name.startswith('POWER'):
-            accepts_types = ['WisPower']
-        else:
-            accepts_types = []
+        accepts = SLOTS.accepts(slot_name)
+        accepts_types = [accepts] if accepts else []
 
         # Build eligible modules
         eligible = []
@@ -485,7 +554,7 @@ def combine(definitions, config, base_id, slot_assignments, rules=None):
     slot_def = config.get('slots', {})
     slots = {}
     sorted_slot_names = sorted(definitions[base_id]['slots'].keys(),
-                               key=lambda x: SLOT_ORDER.index(x) if x in SLOT_ORDER else len(SLOT_ORDER))
+                               key=lambda x: SLOTS.sort_index(x))
     for slot_name in sorted_slot_names:
         slots[slot_name] = merge(
             copy.deepcopy(slot_def[slot_name]),
@@ -523,7 +592,7 @@ def combine(definitions, config, base_id, slot_assignments, rules=None):
     # Build columns
     columns = ["Function"]
     for k in slot_module:
-        columns.append(SLOT_NAMES.get(k, k))
+        columns.append(_column_label(k))
 
     return {
         'slot_module': slot_module,
@@ -541,15 +610,6 @@ def combine(definitions, config, base_id, slot_assignments, rules=None):
 # =============================================================================
 # v1 API helpers
 # =============================================================================
-
-# Module types that map to specific slot prefixes (used for compatible_slots
-# index computation — includes Cores since a Core "fits" in the CORE slot).
-_TYPE_TO_SLOT_PREFIX = {
-    'WisCore': 'CORE',
-    'WisIO': 'IO_',
-    'WisSensor': 'SENSOR_',
-    'WisPower': 'POWER',
-}
 
 # Module types exposed via /api/v1/modules. Cores have their own endpoint;
 # Bases have their own. WisModule covers externally-connected modules (OLED,
@@ -815,7 +875,7 @@ def _derive_pin_mapping(def_dict, show_nc=False):
     mapping = def_dict.get('mapping') or {}
     if not isinstance(mapping, dict):
         return []
-    pins_per_type = PINS_PER_TYPE.get(def_dict.get('type'), 0)
+    pins_per_type = SLOTS.pins_for_type(def_dict.get('type'))
     rows = []
     if pins_per_type == 0:
         # Modules without fixed pin counts (WisBase, WisModule) — show whatever's listed.
@@ -860,11 +920,19 @@ def _derive_base_pin_mapping_table(base_def, slot_def, show_nc=False):
 
 
 def _derive_base_slot_info(base_def):
-    """{SLOT_NAME: {double, double_blocks, accepts_type, layer}} for combine-tool dropdowns."""
+    """{SLOT_NAME: {label, double, double_blocks, accepts_type, layer}} for
+    combine-tool dropdowns.
+
+    `label` and `accepts_type` come from the slot catalogue; the rest are this
+    base's own occupancy facts. Clients render `label` — the SLOT_NAME key is
+    an identifier and reads as one ("SENSOR_A"), which is not a name any
+    customer should be shown.
+    """
     out = {}
     for slot_name, overrides in (base_def.get('slots') or {}).items():
         overrides = overrides or {}
         out[slot_name] = {
+            'label': SLOTS.label(slot_name),
             'double': bool(overrides.get('double', False)),
             'double_blocks': overrides.get('double_blocks'),
             'accepts_type': _slot_expected_type(slot_name),
@@ -901,7 +969,7 @@ def _build_compatible_slots_index(definitions):
     bases = [(bid, b) for bid, b in definitions.items() if b.get('type') == 'WisBase']
     for mid, m in definitions.items():
         mtype = m.get('type')
-        if mtype not in _TYPE_TO_SLOT_PREFIX:
+        if mtype not in _slot_accepted_types():
             continue
         is_double = m.get('double', False) and mtype == 'WisSensor'
         per_base = {}
@@ -910,13 +978,7 @@ def _build_compatible_slots_index(definitions):
             eligible = []
             for slot_name, overrides in base_slots.items():
                 overrides = overrides or {}
-                if mtype == 'WisCore' and slot_name != 'CORE':
-                    continue
-                if mtype == 'WisPower' and not slot_name.startswith('POWER'):
-                    continue
-                if mtype == 'WisIO' and not slot_name.startswith('IO_'):
-                    continue
-                if mtype == 'WisSensor' and not slot_name.startswith('SENSOR_'):
+                if SLOTS.accepts(slot_name) != mtype:
                     continue
                 if is_double and not overrides.get('double', False):
                     continue
@@ -924,7 +986,7 @@ def _build_compatible_slots_index(definitions):
             if eligible:
                 per_base[_to_display_id(bid)] = sorted(
                     eligible,
-                    key=lambda x: SLOT_ORDER.index(x) if x in SLOT_ORDER else len(SLOT_ORDER)
+                    key=lambda x: SLOTS.sort_index(x)
                 )
         index[mid] = per_base
     return index
@@ -988,7 +1050,7 @@ def get_bases(definitions):
         if b.get('type') != 'WisBase':
             continue
         slots = list((b.get('slots') or {}).keys())
-        slots.sort(key=lambda x: SLOT_ORDER.index(x) if x in SLOT_ORDER else len(SLOT_ORDER))
+        slots.sort(key=lambda x: SLOTS.sort_index(x))
         out.append({
             'id': _to_display_id(bid),
             'name': b.get('description', ''),
@@ -1011,7 +1073,7 @@ def get_base(definitions, config, base_id, show_nc=False):
     b = definitions[bid]
     slot_def = config.get('slots') or {}
     slots = list((b.get('slots') or {}).keys())
-    slots.sort(key=lambda x: SLOT_ORDER.index(x) if x in SLOT_ORDER else len(SLOT_ORDER))
+    slots.sort(key=lambda x: SLOTS.sort_index(x))
     slot_pin_map = _derive_base_slot_pin_map(b, slot_def)
     return {
         'id': _to_display_id(bid),
@@ -1203,16 +1265,12 @@ def _resolve_lorawan(core_def):
 
 
 def _slot_expected_type(slot_name):
-    """Which module type a slot accepts."""
-    if slot_name == 'CORE':
-        return 'WisCore'
-    if slot_name.startswith('IO_'):
-        return 'WisIO'
-    if slot_name.startswith('SENSOR_'):
-        return 'WisSensor'
-    if slot_name.startswith('POWER'):
-        return 'WisPower'
-    return None
+    """Which module type a slot accepts, per the slot catalogue.
+
+    Was a slot-name-prefix chain (`SENSOR_*` -> WisSensor, and so on), which
+    made a slot's meaning a property of how its identifier was spelled.
+    """
+    return SLOTS.accepts(slot_name)
 
 
 def resolve(definitions, config, rules, core_id, base_id, slot_assignments,
@@ -1248,7 +1306,7 @@ def resolve(definitions, config, rules, core_id, base_id, slot_assignments,
 
     sorted_slot_names = sorted(
         base_slots.keys(),
-        key=lambda x: SLOT_ORDER.index(x) if x in SLOT_ORDER else len(SLOT_ORDER)
+        key=lambda x: SLOTS.sort_index(x)
     )
 
     # Build slot_module dict; CORE is injected from top-level `core` when present.
@@ -1362,7 +1420,7 @@ def resolve(definitions, config, rules, core_id, base_id, slot_assignments,
     # The consumer contract ignores these fields for forwards-compat.
     columns = ['Function']
     for k in slot_module:
-        columns.append(SLOT_NAMES.get(k, k))
+        columns.append(_column_label(k))
     documentation = []
     legacy_notes = []
     for k, v in slot_module.items():
@@ -1568,7 +1626,7 @@ def _slot_layer(base_def, slot_name):
 
 
 def _slot_sort_index(slot_name):
-    return SLOT_ORDER.index(slot_name) if slot_name in SLOT_ORDER else len(SLOT_ORDER)
+    return SLOTS.sort_index(slot_name)
 
 
 def _enumerate_assignments(candidates, base_def, cap=_SOLVE_NODE_CAP):

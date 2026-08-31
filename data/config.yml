@@ -1,91 +1,140 @@
 functions:
   default:
-    - I2C_ADDR
-    - 3V3
-    - 3V3_S
-    - AIN0
-    - AIN1
-    - BOOT0
-    - GND
-    - I2C1_SCL
-    - I2C1_SDA
-    - I2C2_SCL
-    - I2C2_SDA
-    - IO1
-    - IO2
-    - IO3
-    - IO4
-    - IO5
-    - IO6
-    - IO7
-    - IO8
-    - LED1
-    - LED2
-    - LED3
-    - RESET
-    - SPI_CLK
-    - SPI_CS
-    - SPI_MISO
-    - SPI_MOSI
-    - SW1
-    - UART0_RX
-    - UART0_TX
-    - UART1_RX
-    - UART1_TX
-    - USB+
-    - USB-
-    - VBAT
-    - VBUS
-    - VDD
-    - VIN
+  - I2C_ADDR
+  - 3V3
+  - 3V3_S
+  - AIN0
+  - AIN1
+  - BOOT0
+  - GND
+  - I2C1_SCL
+  - I2C1_SDA
+  - I2C2_SCL
+  - I2C2_SDA
+  - IO1
+  - IO2
+  - IO3
+  - IO4
+  - IO5
+  - IO6
+  - IO7
+  - IO8
+  - LED1
+  - LED2
+  - LED3
+  - RESET
+  - SPI_CLK
+  - SPI_CS
+  - SPI_MISO
+  - SPI_MOSI
+  - SW1
+  - UART0_RX
+  - UART0_TX
+  - UART1_RX
+  - UART1_TX
+  - USB+
+  - USB-
+  - VBAT
+  - VBUS
+  - VDD
+  - VIN
   raspberry:
-    - I2C_ADDR
-    - 3V3
-    - 5V
-    - VBAT
-    - GND
-    - I2C1_SCL
-    - I2C1_SDA
-    - SPI_CS1
-    - SPI_CS0
-    - SPI_MISO
-    - SPI_MOSI
-    - SPI_CLK
-    - UART0_RX
-    - UART0_TX
-    #- GPIO00 # ID-SD
-    #- GPIO01 # ID_SC
-    #- GPIO02 # I2C1_SDA
-    #- GPIO03 # I2C1_SCL
-    - GPIO04 #UART3_TX
-    - GPIO05 #UART3_RX
-    - GPIO06
-    #- GPIO07 #SPI_CS1
-    #- GPIO08 #SPI_CS0
-    #- GPIO09 #SPI_MISO
-    #- GPIO10 #SPI_MOSI
-    #- GPIO11 #SPI_CLK
-    - GPIO12
-    - GPIO13
-    #- GPIO14 # UART0_TX
-    #- GPIO15 # UART0_RX
-    - GPIO16
-    - GPIO17
-    - GPIO18
-    - GPIO19
-    - GPIO20
-    - GPIO21
-    - GPIO22
-    - GPIO23
-    - GPIO24
-    - GPIO25
-    - GPIO26
-    - GPIO27
-    - AIN0 # specific for RAK6421
-    - AIN1 # specific for RAK6421
-    - AIN2 # specific for RAK6421
-    - AIN3 # specific for RAK6421
-
+  - I2C_ADDR
+  - 3V3
+  - 5V
+  - VBAT
+  - GND
+  - I2C1_SCL
+  - I2C1_SDA
+  - SPI_CS1
+  - SPI_CS0
+  - SPI_MISO
+  - SPI_MOSI
+  - SPI_CLK
+  - UART0_RX
+  - UART0_TX
+  - GPIO04
+  - GPIO05
+  - GPIO06
+  - GPIO12
+  - GPIO13
+  - GPIO16
+  - GPIO17
+  - GPIO18
+  - GPIO19
+  - GPIO20
+  - GPIO21
+  - GPIO22
+  - GPIO23
+  - GPIO24
+  - GPIO25
+  - GPIO26
+  - GPIO27
+  - AIN0
+  - AIN1
+  - AIN2
+  - AIN3
+slot_info:
+  CORE:
+    accepts: WisCore
+    family: core
+    label: Core Slot
+    order: 10
+    pins: 40
+  IO_A:
+    accepts: WisIO
+    family: io
+    label: IO Slot A
+    order: 30
+    pins: 40
+  IO_B:
+    accepts: WisIO
+    family: io
+    label: IO Slot B
+    order: 40
+    pins: 40
+  POWER:
+    accepts: WisPower
+    family: power
+    label: Power Slot
+    order: 20
+    pins: 40
+  SENSOR_A:
+    accepts: WisSensor
+    family: sensor
+    label: Sensor Slot A
+    order: 50
+    pins: 24
+  SENSOR_B:
+    accepts: WisSensor
+    family: sensor
+    label: Sensor Slot B
+    order: 60
+    pins: 24
+  SENSOR_C:
+    accepts: WisSensor
+    family: sensor
+    label: Sensor Slot C
+    order: 70
+    pins: 24
+  SENSOR_D:
+    accepts: WisSensor
+    family: sensor
+    label: Sensor Slot D
+    order: 80
+    pins: 24
+  SENSOR_E:
+    accepts: WisSensor
+    family: sensor
+    label: Sensor Slot E
+    order: 90
+    pins: 24
+  SENSOR_F:
+    accepts: WisSensor
+    family: sensor
+    label: Sensor Slot F
+    order: 100
+    pins: 24
 slots:
   CORE:
     1: VBAT
@@ -104,14 +153,14 @@ slots:
     14: LED1
     15: LED2
     16: LED3
-    17: VDD 
-    18: VDD 
-    19: I2C1_SDA 
+    17: VDD
+    18: VDD
+    19: I2C1_SDA
     20: I2C1_SCL
-    21: AIN0 
-    22: AIN1 
-    23: BOOT0 
-    24: IO7 
+    21: AIN0
+    22: AIN1
+    23: BOOT0
+    24: IO7
     25: SPI_CS
     26: SPI_CLK
     27: SPI_MISO
@@ -126,7 +175,7 @@ slots:
     36: I2C2_SCL
     37: IO5
     38: IO6
-    39: GND 
+    39: GND
     40: GND
   IO_A:
     1: VBAT
@@ -145,13 +194,13 @@ slots:
     14: LED1
     15: LED2
     16: LED3
-    17: VDD 
-    18: VDD 
-    19: I2C1_SDA 
+    17: VDD
+    18: VDD
+    19: I2C1_SDA
     20: I2C1_SCL
-    21: AIN0 
-    22: AIN1 
-    23: NC 
+    21: AIN0
+    22: AIN1
+    23: NC
     24: NC
     25: SPI_CS
     26: SPI_CLK
@@ -167,7 +216,7 @@ slots:
     36: I2C2_SCL
     37: IO5
     38: IO6
-    39: GND 
+    39: GND
     40: GND
   IO_B:
     1: VBAT
@@ -186,13 +235,13 @@ slots:
     14: LED1
     15: LED2
     16: LED3
-    17: VDD 
-    18: VDD 
-    19: I2C1_SDA 
+    17: VDD
+    18: VDD
+    19: I2C1_SDA
     20: I2C1_SCL
-    21: AIN0 
-    22: AIN1 
-    23: NC 
+    21: AIN0
+    22: AIN1
+    23: NC
     24: NC
     25: SPI_CS
     26: SPI_CLK
@@ -208,158 +257,8 @@ slots:
     36: I2C2_SCL
     37: IO5
     38: IO6
-    39: GND 
+    39: GND
     40: GND
-  SENSOR_A:
-    1: UART0_TX
-    2: GND
-    3: SPI_CS
-    4: SPI_CLK
-    5: SPI_MISO
-    6: SPI_MOSI
-    7: I2C1_SCL
-    8: I2C1_SDA
-    9: 3V3
-    10: IO2
-    11: 3V3_S
-    12: IO1
-    13: NC
-    14: 3V3_S
-    15: NC 
-    16: 3V3
-    17: NC 
-    18: NC 
-    19: NC 
-    20: NC 
-    21: NC 
-    22: NC 
-    23: GND 
-    24: UART0_RX 
-  SENSOR_B:
-    1: NC
-    2: GND
-    3: SPI_CS
-    4: SPI_CLK
-    5: SPI_MISO
-    6: SPI_MOSI
-    7: I2C1_SCL
-    8: I2C1_SDA
-    9: 3V3
-    10: IO1
-    11: 3V3_S
-    12: IO2
-    13: NC
-    14: 3V3_S
-    15: NC 
-    16: 3V3
-    17: NC 
-    18: NC 
-    19: NC 
-    20: NC 
-    21: NC 
-    22: NC 
-    23: GND 
-    24: NC 
-  SENSOR_C:
-    1: NC
-    2: GND
-    3: SPI_CS
-    4: SPI_CLK
-    5: SPI_MISO
-    6: SPI_MOSI
-    7: I2C1_SCL
-    8: I2C1_SDA
-    9: 3V3
-    10: IO4
-    11: 3V3_S
-    12: IO3
-    13: NC
-    14: 3V3_S
-    15: NC 
-    16: 3V3
-    17: NC 
-    18: NC 
-    19: NC 
-    20: NC 
-    21: NC 
-    22: NC 
-    23: GND 
-    24: NC 
-  SENSOR_D:
-    1: NC
-    2: GND
-    3: SPI_CS
-    4: SPI_CLK
-    5: SPI_MISO
-    6: SPI_MOSI
-    7: I2C1_SCL
-    8: I2C1_SDA
-    9: 3V3
-    10: IO6
-    11: 3V3_S
-    12: IO5
-    13: NC
-    14: 3V3_S
-    15: NC 
-    16: 3V3
-    17: NC 
-    18: NC 
-    19: NC 
-    20: NC 
-    21: NC 
-    22: NC 
-    23: GND 
-    24: NC 
-  SENSOR_E:
-    1: UART0_TX
-    2: GND
-    3: SPI_CS
-    4: SPI_CLK
-    5: SPI_MISO
-    6: SPI_MOSI
-    7: I2C1_SCL
-    8: I2C1_SDA
-    9: 3V3
-    10: IO3
-    11: 3V3_S
-    12: IO4
-    13: NC
-    14: 3V3_S
-    15: NC 
-    16: 3V3
-    17: NC 
-    18: NC 
-    19: NC 
-    20: NC 
-    21: NC 
-    22: NC 
-    23: GND 
-    24: UART0_RX 
-  SENSOR_F:
-    1: UART1_TX
-    2: GND
-    3: SPI_CS
-    4: SPI_CLK
-    5: SPI_MISO
-    6: SPI_MOSI
-    7: I2C1_SCL
-    8: I2C1_SDA
-    9: 3V3
-    10: IO5
-    11: 3V3_S
-    12: IO6
-    13: NC
-    14: 3V3_S
-    15: NC 
-    16: 3V3
-    17: NC 
-    18: NC 
-    19: NC 
-    20: NC 
-    21: NC 
-    22: NC 
-    23: GND 
-    24: UART1_RX 
   POWER:
     1: VBAT
     2: VBAT
@@ -379,11 +278,11 @@ slots:
     16: NC
     17: 3V3
     18: 3V3
-    19: I2C1_SDA 
+    19: I2C1_SDA
     20: I2C1_SCL
-    21: AIN0 
-    22: AIN1 
-    23: NC 
+    21: AIN0
+    22: AIN1
+    23: NC
     24: NC
     25: SPI_CS
     26: SPI_CLK
@@ -399,6 +298,155 @@ slots:
     36: I2C2_SCL
     37: IO5
     38: IO6
-    39: GND 
+    39: GND
     40: GND
-
+  SENSOR_A:
+    1: UART0_TX
+    2: GND
+    3: SPI_CS
+    4: SPI_CLK
+    5: SPI_MISO
+    6: SPI_MOSI
+    7: I2C1_SCL
+    8: I2C1_SDA
+    9: 3V3
+    10: IO2
+    11: 3V3_S
+    12: IO1
+    13: NC
+    14: 3V3_S
+    15: NC
+    16: 3V3
+    17: NC
+    18: NC
+    19: NC
+    20: NC
+    21: NC
+    22: NC
+    23: GND
+    24: UART0_RX
+  SENSOR_B:
+    1: NC
+    2: GND
+    3: SPI_CS
+    4: SPI_CLK
+    5: SPI_MISO
+    6: SPI_MOSI
+    7: I2C1_SCL
+    8: I2C1_SDA
+    9: 3V3
+    10: IO1
+    11: 3V3_S
+    12: IO2
+    13: NC
+    14: 3V3_S
+    15: NC
+    16: 3V3
+    17: NC
+    18: NC
+    19: NC
+    20: NC
+    21: NC
+    22: NC
+    23: GND
+    24: NC
+  SENSOR_C:
+    1: NC
+    2: GND
+    3: SPI_CS
+    4: SPI_CLK
+    5: SPI_MISO
+    6: SPI_MOSI
+    7: I2C1_SCL
+    8: I2C1_SDA
+    9: 3V3
+    10: IO4
+    11: 3V3_S
+    12: IO3
+    13: NC
+    14: 3V3_S
+    15: NC
+    16: 3V3
+    17: NC
+    18: NC
+    19: NC
+    20: NC
+    21: NC
+    22: NC
+    23: GND
+    24: NC
+  SENSOR_D:
+    1: NC
+    2: GND
+    3: SPI_CS
+    4: SPI_CLK
+    5: SPI_MISO
+    6: SPI_MOSI
+    7: I2C1_SCL
+    8: I2C1_SDA
+    9: 3V3
+    10: IO6
+    11: 3V3_S
+    12: IO5
+    13: NC
+    14: 3V3_S
+    15: NC
+    16: 3V3
+    17: NC
+    18: NC
+    19: NC
+    20: NC
+    21: NC
+    22: NC
+    23: GND
+    24: NC
+  SENSOR_E:
+    1: UART0_TX
+    2: GND
+    3: SPI_CS
+    4: SPI_CLK
+    5: SPI_MISO
+    6: SPI_MOSI
+    7: I2C1_SCL
+    8: I2C1_SDA
+    9: 3V3
+    10: IO3
+    11: 3V3_S
+    12: IO4
+    13: NC
+    14: 3V3_S
+    15: NC
+    16: 3V3
+    17: NC
+    18: NC
+    19: NC
+    20: NC
+    21: NC
+    22: NC
+    23: GND
+    24: UART0_RX
+  SENSOR_F:
+    1: UART1_TX
+    2: GND
+    3: SPI_CS
+    4: SPI_CLK
+    5: SPI_MISO
+    6: SPI_MOSI
+    7: I2C1_SCL
+    8: I2C1_SDA
+    9: 3V3
+    10: IO5
+    11: 3V3_S
+    12: IO6
+    13: NC
+    14: 3V3_S
+    15: NC
+    16: 3V3
+    17: NC
+    18: NC
+    19: NC
+    20: NC
+    21: NC
+    22: NC
+    23: GND
+    24: UART1_RX

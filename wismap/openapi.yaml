@@ -227,10 +227,10 @@ paths:
                   - { bus: I2C1, slots: [CORE, IO_A, SENSOR_A, SENSOR_B, SENSOR_C, SENSOR_D] }
                 datasheet_url: https://docs.rakwireless.com/product-categories/wisblock/rak19007/overview/
                 slot_info:
-                  CORE: { double: false, double_blocks: null, accepts_type: WisCore, layer: top }
-                  IO_A: { double: false, double_blocks: null, accepts_type: WisIO, layer: top }
-                  SENSOR_A: { double: true, double_blocks: SENSOR_B, accepts_type: WisSensor, layer: top }
-                  SENSOR_C: { double: false, double_blocks: null, accepts_type: WisSensor, layer: bottom }
+                  CORE: { label: Core Slot, double: false, double_blocks: null, accepts_type: WisCore, layer: top }
+                  IO_A: { label: IO Slot A, double: false, double_blocks: null, accepts_type: WisIO, layer: top }
+                  SENSOR_A: { label: Sensor Slot A, double: true, double_blocks: SENSOR_B, accepts_type: WisSensor, layer: top }
+                  SENSOR_C: { label: Sensor Slot C, double: false, double_blocks: null, accepts_type: WisSensor, layer: bottom }
                 notes:
                   - "Accepts long sensor on SENSOR_A slot but blocking SENSOR_B slot"
         "404":
@@ -845,8 +845,8 @@ components:
               type: object
               description: |
                 **Convenience field; consumers may ignore.** Per-slot
-                double/blocking/accepts-type metadata used by the frontend's
-                combine-tool dropdowns.
+                label/double/blocking/accepts-type metadata used by the
+                frontend's combine-tool dropdowns.
               additionalProperties: { $ref: "#/components/schemas/SlotInfo" }
             pin_mapping_table:
               type: [object, "null"]
@@ -884,6 +884,12 @@ components:
     SlotInfo:
       type: object
       properties:
+        label:
+          type: string
+          description: |
+            Customer-facing name of the slot, e.g. `Sensor Slot A`. Render
+            this; the slot's key (`SENSOR_A`) is an identifier, not a name,
+            and must not be shown to users or reshaped into one.
         double:
           type: boolean
           description: True when the slot can host a double-size sensor.

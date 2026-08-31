@@ -18,7 +18,6 @@ from datetime import datetime
 from wismap import __version__
 from wismap.core import (
     load_data, list_modules, get_module_info, get_base_slots, combine,
-    PINS_PER_TYPE, SLOT_NAMES,
 )
 
 # -----------------------------------------------------------------------------
@@ -214,17 +213,17 @@ def action_combine(*args):
 
             slot_info = base_slots[slot]
 
-            if slot.startswith('CORE'):
-                choices = [(definitions[module]['description'], module) for module in definitions.keys() if definitions[module]['type'] == 'WisCore']
-                questions = [inquirer.List('output', message="Select Core Module", choices=choices, carousel=True)]
-                slot_module[slot] = inquirer.prompt(questions)['output']
+            # Which modules may go here, and what to call the slot, both come
+            # from the slot catalogue rather than from the slot name's spelling.
+            accepts = slot_info['accepts_type']
+            label = slot_info['label']
+            is_double = slot_info['double']
 
-            if slot.startswith('SENSOR'):
-                is_double = slot_info['double']
+            if accepts == 'WisSensor':
                 is_double_text = "(double)" if is_double else ""
                 choices = [(definitions[module]['description'], module) for module in definitions.keys() if (definitions[module]['type'] == 'WisSensor') and (is_double or not definitions[module].get('double', False))]
                 choices.insert(0, ("Empty", "EMPTY"))
-                questions = [inquirer.List('output', message=f"Select Sensor Module in slot {slot} {is_double_text}", choices=choices, carousel=True)]
+                questions = [inquirer.List('output', message=f"Select Sensor Module in {label} {is_double_text}", choices=choices, carousel=True)]
                 slot_module[slot] = inquirer.prompt(questions)['output']
                 if slot_module[slot] != 'EMPTY':
                     if definitions[slot_module[slot]].get('double', False):
@@ -232,15 +231,13 @@ def action_combine(*args):
                         if blocks:
                             blocked.append(blocks)
 
-            if slot.startswith('IO'):
-                choices = [(definitions[module]['description'], module) for module in definitions.keys() if definitions[module]['type'] == 'WisIO']
-                choices.insert(0, ("Empty", "EMPTY"))
-                questions = [inquirer.List('output', message=f"Select IO Module in slot {slot}", choices=choices, carousel=True)]
-                slot_module[slot] = inquirer.prompt(questions)['output']
-
-            if slot.startswith('POWER'):
-                choices = [(definitions[module]['description'], module) for module in definitions.keys() if definitions[module]['type'] == 'WisPower']
-                questions = [inquirer.List('output', message=f"Select Power Module in slot {slot}", choices=choices, carousel=True)]
+            elif accepts:
+                choices = [(definitions[module]['description'], module) for module in definitions.keys() if definitions[module]['type'] == accepts]
+                # A base needs a Core to be usable, so that slot cannot be left
+                # empty; every other slot can.
+                if accepts != 'WisCore':
+                    choices.insert(0, ("Empty", "EMPTY"))
+                questions = [inquirer.List('output', message=f"Select module in {label}", choices=choices, carousel=True)]
                 slot_module[slot] = inquirer.prompt(questions)['output']
 
     # -------------------------------------------------------------------------
