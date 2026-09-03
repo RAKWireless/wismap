@@ -21,7 +21,7 @@ The REST API (Flask) and the web frontend (React) have been developed with the a
 The quickest way to run WisMAP is with Docker Compose:
 
 ```
-git clone https://github.com/xoseperez/wismap
+git clone https://github.com/rakwireless/wismap
 cd wismap
 docker compose up -d --build
 ```
@@ -46,7 +46,7 @@ docker run -p 5000:5000 wismap
 Requirements: Python 3, Node.js, `virtualenv` and `make`.
 
 ```
-git clone https://github.com/xoseperez/wismap
+git clone https://github.com/rakwireless/wismap
 cd wismap
 make init
 make frontend-install
@@ -180,8 +180,8 @@ docker compose up -d -e RATELIMIT_DEFAULT=240/minute
 
 ## Contribute
 
-There are several ways to contribute to this project. You can [report](http://github.com/xoseperez/wismap/issues) bugs or [ask](http://github.com/xoseperez/wismap/issues) for new features directly on GitHub.
-You can also submit your own new features of bug fixes via a [pull request](http://github.com/xoseperez/wismap/pr).
+There are several ways to contribute to this project. You can [report](http://github.com/rakwireless/wismap/issues) bugs or [ask](http://github.com/rakwireless/wismap/issues) for new features directly on GitHub.
+You can also submit your own new features of bug fixes via a [pull request](http://github.com/rakwireless/wismap/pr).
 
 ## License
 
