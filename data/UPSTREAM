@@ -3,6 +3,6 @@
 # value there, not here.
 repo: https://github.com/RAKWireless/wisblock-data.git
 ref: master
-commit: 1d6d83f3f33ab07baaee0fb574f702e3afe347f1
-committed: 2026-09-04T17:36:37+02:00
-subject: Add arduino template project to the repo
+commit: 50aa39f8b095780828bfc9203e511709beb89255
+committed: 2026-09-30T10:35:32+02:00
+subject: Fix RAK12008 and RAK12037 chp. Fix RAK1921 I2C address. Fix RAK12500 interfaces. Do not output mapping-less modules to rakstudio (for the moment).

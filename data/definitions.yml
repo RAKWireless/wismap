@@ -360,7 +360,7 @@ rak12007:
   type: WisIO
 rak12008:
   category: sensor
-  chip: Sensirion SCD30
+  chip: Sensirion STC31
   description: RAK12008 CO2 Gas Sensor
   documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12008/overview/
   i2c_address: '0x2C'
@@ -1036,7 +1036,7 @@ rak12035:
   type: WisModule
 rak12037:
   category: sensor
-  chip: Sensirion SCD40
+  chip: Sensirion SCD30
   description: RAK12037 CO2 Sensor
   documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12037/overview/
   i2c_address: '0x61'
@@ -1286,7 +1286,8 @@ rak12500:
   - gps
   - location
   - tracking
-  - spi
+  - i2c
+  - uart
   type: WisSensor
 rak12501:
   category: sensor
@@ -3757,7 +3758,7 @@ rak1921:
   chip: Solomon Systech SSD1306
   description: RAK1921 OLED Display
   documentation: https://docs.rakwireless.com/product-categories/wisblock/rak1921/overview/
-  i2c_address: '0x76'
+  i2c_address: '0x3C'
   images:
   - https://images.docs.rakwireless.com/wisblock/rak1921/rak1921.png
   tags:

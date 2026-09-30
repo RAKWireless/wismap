@@ -149,7 +149,7 @@ Example output:
 Module: RAK12008
 Type: WisSensor
 Description: RAK12008 CO2 Gas Sensor
-Chip: Sensirion SCD30
+Chip: Sensirion STC31
 Documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12008/overview/
 Long: False
 I2C Address: 0x2C
