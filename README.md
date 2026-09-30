@@ -78,6 +78,28 @@ authored here** — they are verbatim copies of the `dist/wismap/` artifacts gen
 [wisblock-data](https://github.com/RAKWireless/wisblock-data), which authors WisBlock module facts
 once and feeds every consumer from them.
 
+### Automatically
+
+`.github/workflows/sync-data.yml` does this on its own: daily, on manual dispatch, and whenever
+wisblock-data announces a new build with a `wisblock-data-updated` repository dispatch. It pulls
+the upstream artifacts, regenerates the contract fixtures to match, and opens a pull request on
+`chore/sync-wisblock-data` when anything moved. Nothing lands on `master` without review — a
+catalog change alters what the API reports.
+
+One-time setup:
+
+* **Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"**,
+  so the workflow can open the PR.
+* **`secrets.WISBLOCK_DATA_TOKEN`** — a token with read access to wisblock-data. Needed only
+  while that repository is private: sharing an organisation does not let one repository's
+  `GITHUB_TOKEN` read another's. Once it is public the workflows fall back to the built-in
+  token on their own and the secret can be deleted.
+
+Optionally set **`secrets.SYNC_PR_TOKEN`** to a PAT as well: a branch pushed with `GITHUB_TOKEN`
+does not trigger other workflows, so without it `ci.yml` will not run on the sync PR.
+
+### By hand
+
 Point `WISBLOCK_DATA` at a wisblock-data checkout (it defaults to `../../wisblock-data`):
 
 ```
@@ -96,6 +118,20 @@ A wrong or missing module value is fixed **upstream** — in wisblock-data's
 `modules/<id>/{meta,hardware}.yml` — then regenerated there with `wbdata generate` and synced
 here. Editing the files under `data/` directly loses the change on the next sync and puts WisMAP
 out of step with the other consumers of the same data.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs three drift guards on every pull request and push to `master`.
+Each regenerates a committed artifact and requires that it did not move:
+
+| Target | Guards |
+|---|---|
+| `make check-data` | `data/` still matches the upstream artifacts it was vendored from |
+| `make check-fixtures` | `tests/fixtures/` still describes what the server returns |
+| `make check-openapi` | `wismap/openapi.yaml` still matches the registered routes and version |
+
+`check-data` skips with a notice on pull requests from forks, which get no secrets and so cannot
+check out the private upstream repository.
 
 ## CLI
 

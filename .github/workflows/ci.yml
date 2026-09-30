@@ -1,0 +1,68 @@
+name: CI
+
+# Three drift guards, all of the same shape: regenerate a committed artifact
+# and require that it did not move.
+#
+#   check-data      data/ still matches the wisblock-data artifacts it was
+#                   vendored from — catches a hand-edit to a generated file
+#   check-fixtures  tests/fixtures/ still describes what the server returns —
+#                   catches a catalog or logic change shipped without telling
+#                   the WisBlock Code Generator
+#   check-openapi   wismap/openapi.yaml still matches the registered routes
+#                   and __version__
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+
+      - name: make check-fixtures
+        run: make check-fixtures
+
+      - name: make check-openapi
+        run: make check-openapi
+
+      # Reaching wisblock-data is allowed to fail without failing the build.
+      # Whether it succeeds depends on things a PR author cannot control: while
+      # the repository is private this needs WISBLOCK_DATA_TOKEN, because being
+      # in the same organisation does not let one repo's GITHUB_TOKEN read
+      # another's — and a pull request from a fork gets no secrets at all. Once
+      # the repository is public the fallback token below is enough and the
+      # secret can go. Either way the scheduled sync job is what actually keeps
+      # data/ current, so a skip here is a gap in reporting, not in coverage.
+      - name: Check out wisblock-data
+        id: upstream
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: RAKWireless/wisblock-data
+          ref: master
+          token: ${{ secrets.WISBLOCK_DATA_TOKEN || github.token }}
+          path: .upstream/wisblock-data
+
+      - name: make check-data
+        if: steps.upstream.outcome == 'success'
+        run: make check-data WISBLOCK_DATA=.upstream/wisblock-data
+
+      - name: Report a skipped upstream check
+        if: steps.upstream.outcome != 'success'
+        run: |
+          echo "::notice::check-data did not run — wisblock-data could not be" \
+               "checked out (no WISBLOCK_DATA_TOKEN, as on a fork PR, or the" \
+               "checkout failed). This build says nothing about whether data/" \
+               "matches upstream."
