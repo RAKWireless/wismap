@@ -4,6 +4,90 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
+## 0.7.0 — 2026-09-07
+
+wisblock-data becomes the source of truth. The module catalog, the slot catalogue
+and the conflict rules are no longer authored in this repository — they are
+generated upstream from per-aspect module files and vendored here, so WisMAP and
+the other consumers of that data can no longer disagree about a module.
+
+### Added
+
+* **`make sync-data`** — copies `dist/wismap/{definitions,config,rules}.yml` into `data/`,
+  via `tools/sync-data.sh`. The upstream tree is either a checkout (`WISBLOCK_DATA`, default
+  `../../wisblock-data`) or a clone (`WISBLOCK_DATA_REPO`, defaulting to
+  `RAKWireless/wisblock-data`, at `WISBLOCK_DATA_REF`) when that path holds no `dist/wismap` —
+  the second path is what lets a CI runner, or a machine that has never checked the upstream
+  out, sync anyway.
+* **`data/UPSTREAM`** — records the wisblock-data commit that produced the vendored files.
+  Without it the catalog is anonymous: nothing in this repository says which version of the
+  data it carries, which makes an automated sync unauditable. Rewritten only when an artifact
+  actually moved, so a scheduled run that finds nothing new proposes nothing.
+* **`.github/workflows/sync-data.yml`** — the automatic sync. Runs daily, on manual dispatch,
+  and on a `wisblock-data-updated` repository dispatch so upstream can announce a build rather
+  than being waited for. It syncs, regenerates the consumer fixtures, runs the drift guards, and
+  opens a pull request on `chore/sync-wisblock-data` when anything changed. It never pushes to
+  `master` — a catalog change alters what the API reports, so it goes through review.
+  Needs `secrets.WISBLOCK_DATA_TOKEN` only while upstream is private — sharing an organisation
+  does not let one repository's `GITHUB_TOKEN` read another's — and falls back to the built-in
+  token once it is public. `secrets.SYNC_PR_TOKEN` is optional and only exists so that CI runs
+  on the sync PR, which a `GITHUB_TOKEN` push cannot trigger.
+* **`.github/workflows/ci.yml`** — this repository's first CI. Three drift guards on every PR
+  and push to `master`: `check-data`, `check-fixtures`, `check-openapi`. `check-data` reports a
+  notice and skips when wisblock-data cannot be checked out, as on a fork PR, rather than
+  failing a build over something its author cannot fix.
+* **`make check-data`** — asserts the three vendored files still match upstream, so a hand-edit
+  or a half-finished sync is caught rather than shipped.
+* **`make check-fixtures`** — regenerates `tests/fixtures/` and fails if anything moved, which
+  catches a catalog or logic change shipped without telling the WisBlock Code Generator. It
+  snapshots and compares rather than consulting `git diff`, so it answers the same on a CI
+  runner and in a working tree with unrelated uncommitted changes.
+* `chip` is now shown by `python wismap.py info` and returned by `get_module_info()`.
+  The field went from 24 to 107 modules in this sync, which made its absence from the
+  CLI conspicuous; the web UI already displayed it via `/api/v1/modules`.
+
+### Changed
+
+* **Catalog synced from wisblock-data**, 143 field-level changes:
+  * `chip` authored for 83 more modules from RAK datasheet chipset tables (24 → 107).
+  * **Pin roles `SDA1`/`SCL1` corrected to canonical `I2C1_SDA`/`I2C1_SCL`** on
+    RAK13002/13003/13004/14001/14002/14003/14004/14014. The old spellings matched
+    neither the module-role signal table nor the bus-family test, so all eight
+    reported no I2C interface at all — seven of them while carrying an I2C address.
+    `interfaces`, `signal_map` and `core_requirements` are now correct for them.
+  * **Base `naming` keys corrected** on all 8 base boards: the generic function is now
+    the key and the board-specific label the value (`UART1_RX: RXD1`), where both used
+    to be the label (`RXD1: RXD1`). Because the key has to be a function the slot
+    exposes, the base-board column of a combine table left every UART row blank; those
+    cells now carry the board's own pin names.
+  * RAK12017 corrected from a ToF sensor to the IR detection module it is
+    (chip, description and tags).
+  * Phantom I2C addresses dropped from RAK12031 and RAK13800; real ones added for
+    RAK14009/14010/14011 (`0x5F`).
+  * RAK6421 `IO_B` pin 17 is plain `3V3` — the `GPIO00` annotation was stray; there is
+    no such net on the board, and the other three identically-positioned supply pins
+    were already plain `3V3`.
+  * Documentation URLs added for RAK19005 and RAK19008.
+* `make check-openapi` no longer goes through `.venv/bin/activate`; it and the other
+  guards run `$(PYTHON)`, which is the project virtualenv when there is one and `python3`
+  otherwise. The same target now works locally and on a CI runner that installs into the
+  system interpreter.
+* `tests/fixtures/{validate,solve}/*.json` regenerated against the new catalog. Beyond
+  the base-board UART cells, this also picks up the slot labels (`Core Slot`,
+  `Sensor Slot A`, …) that moved from code into `config.yml` in 0.6.0 without the
+  fixtures being refreshed at the time.
+
+### Removed
+
+* **`data/modules/<id>.yml`** (141 files) and **`make generate`** — the catalog is no
+  longer authored here. A module fix is made upstream in wisblock-data, regenerated
+  there, and synced.
+* **`make import`, `python wismap.py import`, `python wismap.py clean`** and the cached
+  `data/WisBlock-IO-Pin-Mapper.xlsx` — the RAK Pin-Mapper spreadsheet is upstream of
+  wisblock-data, not of WisMAP, so the download-and-diff workflow has no consumer left.
+  `openpyxl` drops out of `requirements.txt` with it.
+
+
 ## 0.6.0 — 2026-07-08
 
 WisMAP's own data becomes the source of truth — the module catalog is decoupled
