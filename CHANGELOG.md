@@ -4,6 +4,37 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 
+## 0.7.1 — 2026-09-30
+
+A malformed pin role in the catalog no longer takes the combine path down with it.
+
+### Fixed
+
+* **A `null` pin role no longer crashes combine, `/api/v1/validate` or `/api/v1/solve`.**
+  The rule checks do string work on every role, so a single `null` in a module's
+  `mapping` turned every request touching that module into a 500. The vendored catalog
+  cannot carry one today (wisblock-data's schema rejects it), but nothing in WisMAP
+  enforced that. A `null` role is now treated exactly like an absent one, as is any other
+  non-string role and a whole `mapping: null` or `naming: null`. This applies everywhere a
+  role is read: the combine table, CLI `info`, and `pin_mapping` / `naming` on
+  `GET /api/v1/{modules,cores,bases}/{id}`, which no longer echo a `null`. Output for the
+  current catalog is unchanged.
+* **`GET /api/v1/bases/{id}` no longer gains `naming.I2C_ADDR`** after its worker has
+  served a combine, `/validate` or `/solve`. Building the combine table wrote that key
+  into the loaded catalog's own `naming` dict, so the response depended on which worker
+  answered and what it had served before. The key was never part of any base's data or of
+  the OpenAPI document.
+
+### Changed
+
+* **Catalog synced from wisblock-data** (`50aa39f`):
+  * `chip` corrected on RAK12008 (`Sensirion STC31`) and RAK12037 (`Sensirion SCD30`).
+  * RAK12500 tags: `spi` replaced by `i2c` and `uart`.
+  * RAK1921 I2C address corrected from `0x76` to `0x3C`.
+
+  No consumer fixture moved.
+
+
 ## 0.7.0 — 2026-09-07
 
 wisblock-data becomes the source of truth. The module catalog, the slot catalogue
