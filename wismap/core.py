@@ -212,16 +212,18 @@ def get_module_info(definitions, config, module_id, show_nc=False):
     }
 
     # Mapping table
-    if 'mapping' in mod:
+    mapping = mod.get('mapping')
+    if mapping is not None:
         pins = SLOTS.pins_for_type(mod['type'])
         mapping_rows = []
         if pins == 0:
-            for k, v in mod['mapping'].items():
-                if v:
-                    mapping_rows.append({'pin': str(k), 'function': v})
+            for k, v in mapping.items():
+                role = _pin_role(v)
+                if role:
+                    mapping_rows.append({'pin': str(k), 'function': role})
         else:
             for index in range(pins):
-                name = mod['mapping'].get(index + 1, 'NC')
+                name = _pin_role(mapping.get(index + 1)) or 'NC'
                 if name != 'NC' or show_nc:
                     mapping_rows.append({'pin': str(index + 1), 'function': name})
         info['mapping'] = mapping_rows
@@ -278,7 +280,7 @@ def _combine_pins(slot, mapping):
     output = {}
     for k, v in slot.items():
         if (v not in output) or (output[v] == ''):
-            output[v] = mapping.get(k, "")
+            output[v] = _pin_role(mapping.get(k))
     return output
 
 
@@ -301,9 +303,12 @@ def _function_mapping(definitions, config, mapping_name, slot_module, slots):
         module = slot_module[slot]
         if module and module != 'BLOCKED' and module != 'EMPTY':
             if definitions[module]['type'] in ['WisBase']:
-                slot_mapping[slot] = definitions[module].get('naming', {})
+                # A new dict, not the catalogue's own: I2C_ADDR is written into it
+                # below, and the catalogue's copy is what GET /bases/{id} serves.
+                naming = definitions[module].get('naming') or {}
+                slot_mapping[slot] = {k: _pin_role(v) for k, v in naming.items()}
             elif definitions[module]['type'] in ['WisCore', 'WisIO', 'WisSensor', 'WisPower']:
-                slot_mapping[slot] = _combine_pins(slots[slot], definitions[module].get('mapping', {}))
+                slot_mapping[slot] = _combine_pins(slots[slot], definitions[module].get('mapping') or {})
             addr = _normalize_i2c_address(definitions[module].get('i2c_address', None))
             slot_mapping[slot]['I2C_ADDR'] = ', '.join(addr) if addr else ""
 
@@ -316,6 +321,17 @@ def _function_mapping(definitions, config, mapping_name, slot_module, slots):
         function_slot[function] = row
 
     return function_slot
+
+
+def _pin_role(value):
+    """A pin's role from catalogue data: the role string, or "" for an unused pin.
+
+    Upstream data is schema-checked to hold strings, but YAML allows `null`, and
+    the rule checks and pin tables do string work on every role (`'(NC)' in v`,
+    `v.split(',')`). One `null` would make every combine touching that module
+    raise. Anything that is not a string is treated as an unused pin.
+    """
+    return value if isinstance(value, str) else ""
 
 
 def _check_condition(condition, values):
@@ -881,11 +897,12 @@ def _derive_pin_mapping(def_dict, show_nc=False):
     if pins_per_type == 0:
         # Modules without fixed pin counts (WisBase, WisModule) — show whatever's listed.
         for k, v in mapping.items():
-            if v:
-                rows.append({'pin': str(k), 'function': v})
+            role = _pin_role(v)
+            if role:
+                rows.append({'pin': str(k), 'function': role})
     else:
         for index in range(pins_per_type):
-            name = mapping.get(index + 1, 'NC')
+            name = _pin_role(mapping.get(index + 1)) or 'NC'
             if name != 'NC' or show_nc:
                 rows.append({'pin': str(index + 1), 'function': name})
     return rows
@@ -1093,7 +1110,7 @@ def get_base(definitions, config, base_id, show_nc=False):
         'schematics': b.get('schematics') or [],
         'tags': b.get('tags') or [],
         'i2c_address': b.get('i2c_address'),
-        'naming': b.get('naming') or {},
+        'naming': {k: v for k, v in (b.get('naming') or {}).items() if isinstance(v, str)},
     }
 
 
