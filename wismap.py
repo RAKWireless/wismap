@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import sys
-import re
-import glob
-import yaml
 from rich.console import Console
 from rich.table import Table
 from rich import print, box
-import openpyxl
-import requests
 import inquirer
 import argparse
 import textwrap
-from datetime import datetime
 
 from wismap import __version__
 from wismap.core import (
@@ -25,12 +18,6 @@ from wismap.core import (
 # -----------------------------------------------------------------------------
 
 data_folder = "./data"
-definitions_file = f"{data_folder}/definitions.yml"
-config_file = f"{data_folder}/config.yml"
-modules_folder = f"{data_folder}/modules"
-import_folder = f"{data_folder}/import"
-spreadsheet_url = "https://downloads.rakwireless.com/LoRa/WisBlock/Pin-Mapper/WisBlock-IO-Pin-Mapper.xlsx"
-spreadsheet_file = f"{data_folder}/WisBlock-IO-Pin-Mapper.xlsx"
 show_nc = False
 table_format = box.SQUARE # box.SQUARE or box.MARKDOWN
 
@@ -296,164 +283,6 @@ def action_combine(*args):
     print(f"Reproduce this configuration: python wismap.py combine {' '.join([v.lower() for k, v in result['slot_module'].items()])}")
 
 # -----------------------------------------------------------------------------
-# Normalization
-# -----------------------------------------------------------------------------
-
-def _normalize(data):
-    for module in data:
-        for key in ('mapping', 'naming'):
-            if key in data[module]:
-                data[module][key] = dict(sorted((k, v) for k, v in data[module][key].items() if v is not None))
-    return dict(sorted(data.items(), key=lambda e: int(re.findall(r"\d+", e[0])[0])))
-
-# -----------------------------------------------------------------------------
-# Action GENERATE
-# -----------------------------------------------------------------------------
-
-def action_generate():
-    data = {}
-    for path in sorted(glob.glob(f"{modules_folder}/*.yml")):
-        with open(path) as f:
-            entry = yaml.load(f, Loader=yaml.loader.SafeLoader) or {}
-        fname_id = os.path.splitext(os.path.basename(path))[0]
-        if list(entry.keys()) != [fname_id]:
-            sys.exit(f"ERROR: {path} must hold exactly one top-level key '{fname_id}'")
-        if fname_id in data:
-            sys.exit(f"ERROR: duplicate module id '{fname_id}'")
-        data.update({k: v for k, v in entry.items() if v is not None})
-    data = _normalize(data)
-    with open(definitions_file, "w") as w:
-        print("Saving definitions")
-        yaml.dump(data, w, sort_keys=False)
-
-# -----------------------------------------------------------------------------
-# Action IMPORT
-# -----------------------------------------------------------------------------
-
-def import_sheet(data, sheet):
-
-    # Get code
-    module_code = sheet.title.lower()
-    if not module_code in data:
-        data[module_code] = {}
-
-    # Get column offset
-    column_offset = 1
-    if sheet['A3'].value == 'PIN number':
-        column_offset = 0
-
-    # Get type
-    module_type = "WisBase"
-    if sheet.cell(row = 26, column = 2 + column_offset).value == 'BOOT0':
-        module_type = "WisCore"
-    elif sheet.cell(row = 43, column = 1 + column_offset).value == 40:
-        module_type = "WisIO"
-    elif sheet.cell(row = 2, column = 3 + column_offset).value == 'SLOT A':
-        module_type = "WisSensor"
-    data[module_code]['type'] = module_type
-
-    # Get description
-    key_column = 1 + column_offset
-    value_column = 3 + column_offset
-    rows = 40
-    if module_type == "WisBase":
-        module_description = module_code
-    if module_type == "WisCore":
-        module_description = module_code
-    if module_type == "WisIO":
-        module_description = sheet.cell(row = 45, column = 2 + column_offset).value
-    if module_type == "WisSensor":
-        module_description = sheet.cell(row = 29, column = 2 + column_offset).value
-        rows = 24
-    data[module_code]['description'] = module_description.strip(' "\'\t\r\n').replace("WisBlock ", "")
-
-    # Get documentation
-    module_docs = f"https://docs.rakwireless.com/product-categories/wisblock/{ sheet.title.lower() }/overview/"
-    data[module_code]['documentation'] = module_docs
-
-    # Get mapping
-    mapping = {}
-    for row in range(4, rows+4):
-        pin = str(sheet.cell(row = row, column = key_column).value)
-        if pin == "" or pin == "Description":
-            break
-        function = sheet.cell(row = row, column = value_column).value
-        if pin.isnumeric():
-            pin = int(pin)
-        if function != "NC":
-            mapping[pin] = function
-    if module_type == 'WisBase':
-        data[module_code]['naming'] = mapping
-    else:
-        data[module_code]['mapping'] = mapping
-
-    # I2C Address(es)
-    address = str(sheet.cell(row = row+3, column = 2+column_offset).value)
-    matches = re.findall(r"0x[0-9a-fA-F]{2}", address)
-    if len(matches):
-        data[module_code]['i2c_address'] = matches if len(matches) > 1 else matches[0]
-
-
-def action_import():
-
-    skip_sheets = ["Pin Mapper", "model list", "NA IO", "NA_SENS"]
-
-    print
-    print("[bold cyan]---------------------------------------[/]")
-    print("[bold cyan]Importing data from original spreadheet[/]")
-    print("[bold cyan]---------------------------------------[/]")
-
-    if not os.path.isfile(spreadsheet_file):
-        print("Downloading spreadsheet")
-        response = requests.get(spreadsheet_url)
-        if not response.ok:
-            sys.exit(1)
-        with open(spreadsheet_file, mode="wb") as file:
-            file.write(response.content)
-    else:
-        print("Using cached spreadsheet")
-
-    # Open Pin Mapper spreadsheet
-    wb = openpyxl.load_workbook(spreadsheet_file)
-    print(f"Found {len(wb.sheetnames) - len(skip_sheets)} products")
-
-    # Output data
-    data = {}
-
-    # Walk sheets
-    for sheet_name in wb.sheetnames:
-        if sheet_name not in skip_sheets:
-            #print(f"Importing {sheet_name.upper()}...")
-            sheet = wb[sheet_name]
-            import_sheet(data, sheet)
-
-    # Filter & sort mappings
-    print("Filtering and sorting")
-    data = _normalize(data)
-
-    # Resume
-    print(f"Final list has {len(data.keys())} products")
-
-    # Save a timestamped raw snapshot for upstream-diffing (never overwrite definitions.yml)
-    os.makedirs(import_folder, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    snapshot = f"{import_folder}/{stamp}.yml"
-    with open(snapshot, "w") as w:
-        print(f"Saving raw snapshot to {snapshot}")
-        yaml.dump(data, w, sort_keys=False)
-    print(f"Wrote raw snapshot {snapshot} — diff two snapshots to spot upstream changes.")
-
-# -----------------------------------------------------------------------------
-# Action CLEAN
-# -----------------------------------------------------------------------------
-
-def action_clean():
-
-    # Delete file
-    if os.path.isfile(spreadsheet_file):
-        os.remove(spreadsheet_file)
-
-# -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
 
@@ -462,9 +291,6 @@ ACTIONS = {
     "search" : action_search,
     "info" : action_info,
     "combine" : action_combine,
-    "import" : action_import,
-    "generate" : action_generate,
-    "clean" : action_clean,
 }
 
 parser = argparse.ArgumentParser(

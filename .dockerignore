@@ -3,7 +3,6 @@
 .claude
 __pycache__
 *.pyc
-*.xlsx
 node_modules
 frontend/dist
 frontend/node_modules

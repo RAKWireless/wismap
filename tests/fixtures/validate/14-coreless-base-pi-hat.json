@@ -426,12 +426,12 @@
     "columns": [
       "Function",
       "Base board",
-      "IO_A slot",
-      "IO_B slot",
-      "SENSOR_A slot",
-      "SENSOR_B slot",
-      "SENSOR_C slot",
-      "SENSOR_D slot"
+      "IO Slot A",
+      "IO Slot B",
+      "Sensor Slot A",
+      "Sensor Slot B",
+      "Sensor Slot C",
+      "Sensor Slot D"
     ],
     "slot_module": {
       "BASE": "RAK6421",

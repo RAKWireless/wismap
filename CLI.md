@@ -1,16 +1,16 @@
 WisBlock PIN Mapper CLI
 ==========================
 
-WisMAP is a CLI port written in Python for the RAKwireless Pin Mapper spreadsheet that allows the user to identify potential conflicts between modules in their WisBlock integrations.
+WisMAP is a Python CLI that identifies potential conflicts between modules in a WisBlock integration. Its module catalog is vendored from the **wisblock-data** repository (see [README.md](README.md#updating-module-definitions)); the CLI only reads it.
 
 The CLI shares its business logic (catalog, slot resolution, conflict detection) with the HTTP API documented in [README.md](README.md#http-api). The CLI is the most direct way to script combine analyses or scan the catalog from a terminal; the HTTP API is for integrations and for the bundled web UI.
 
 ## Install / Update
 
-At the time being, there is no proper installation procedure so the only way is to manually retrieve the code, install the dependencies and import the latest definitions from the original Pin Mapper spreadsheet.
+At the time being, there is no proper installation procedure so the only way is to manually retrieve the code and install the dependencies. The module catalog ships with the repository — nothing has to be downloaded before the first run.
 
 ```
-git clone https://github.com/xoseperez/wismap
+git clone https://github.com/rakwireless/wismap
 cd wismap
 pip install -r requirements.txt
 python3 wismap.py list
@@ -53,7 +53,7 @@ Alternative ways to run the code are available:
 usage: python wismap.py [-h] [-v] [-m] [-n] action [extra]
 
 positional arguments:
-  action          Action to run: list, search, info, combine, import, clean
+  action          Action to run: list, search, info, combine
 
 options:
   -h, --help      show this help message and exit
@@ -63,37 +63,6 @@ options:
 
 The 'info' action accepts the name of the module to show as an extra argument.
 The 'combine' action accepts a list of modules to mount on the different slots, starting with the base module.
-```
-
-### Import
-
-The import process downloads the latest WisBlock Pin Mapper spreadsheet (https://downloads.rakwireless.com/LoRa/WisBlock/Pin-Mapper/WisBlock-IO-Pin-Mapper.xlsx) if it's not cached already and generates a YAML file (`definitions.yml`) with the definitions for each module. It also patches that file with custom definitions for some modules (these patches can be found on the `config.yml` file). The repository includes a version of the `definitions.yml` file built in the same way, so this step is not mandatory.
-
-```
-python3 wismap.py import
-```
-
-Example output:
-
-```
----------------------------------------
-Importing data from original spreadheet
----------------------------------------
-Using cached spreadsheet
-Found 101 products
-Applying patches
-Filtering and sorting
-Final list has 141 products
-Saving definitions
-
-```
-
-### Clean
-
-The clean action deletes the cached version on the spreadsheet so it will be downloaded again on the next import.
-
-```
-python3 wismap.py clean
 ```
 
 ### List
@@ -163,50 +132,45 @@ Example output:
 
 ```
 [?] Select module:
-   RAK12002 WisBlock RTC Module
-   RAK12003 WisBlock Infrared Temperature Sensor
-   RAK12004 WisBlock MQ2 Gas Sensor Module
-   RAK12005 WisBlock Rain Sensor Module
-   RAK12006 WisBlock PIR Module
-   RAK12007 WisBlock Ultrasonic Module
+   RAK12002 RTC Module
+   RAK12003 Infrared Temperature Sensor
+   RAK12004 MQ2 Gas Sensor Module
+   RAK12005 Rain Sensor Module
+   RAK12006 PIR Module
+   RAK12007 Ultrasonic Module
  > RAK12008 CO2 Gas Sensor
-   RAK12009 WisBlock Alcohol Gas Sensor Module
-   RAK12010 WisBlock Ambient Light Sensor
-   RAK12011 WisBlock WP Barometric Sensor
-   RAK12012 WisBlock Heart Rate Sensor
-   RAK12013 WisBlock 3GHz Radar Module
-   RAK12014 WisBlock Laser ToF module
+   RAK12009 Alcohol Gas Sensor Module
+   RAK12010 Ambient Light Sensor
+   RAK12011 WP Barometric Sensor
+   RAK12012 Heart Rate Sensor
+   RAK12013 3GHz Radar Module
+   RAK12014 Laser ToF Module
 
 Module: RAK12008
-Type: WisIO
+Type: WisSensor
 Description: RAK12008 CO2 Gas Sensor
-Documentation: https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008
-I2C Address: 0x52
+Chip: Sensirion SCD30
+Documentation: https://docs.rakwireless.com/product-categories/wisblock/rak12008/overview/
+Long: False
+I2C Address: 0x2C
+Tags: co2, gas, air-quality, environmental, i2c
 Mapping:
-┏━━━━━┳━━━━━━━━━━┓
-┃ PIN ┃ Function ┃
-┡━━━━━╇━━━━━━━━━━┩
-│ 1   │ VBAT     │
-│ 2   │ VBAT     │
-│ 3   │ GND      │
-│ 4   │ GND      │
-│ 6   │ 3V3_S    │
-│ 19  │ I2C_SCA  │
-│ 20  │ I2C_SCL  │
-│ 22  │ A1       │
-│ 29  │ ENABLE   │
-│ 32  │ A0       │
-│ 37  │ ALERT    │
-│ 38  │ EN       │
-│ 39  │ GND      │
-│ 40  │ GND      │
+┌─────┬──────────┐
+│ PIN │ Function │
+├─────┼──────────┤
+│ 2   │ GND      │
+│ 7   │ I2C_SCL  │
+│ 8   │ I2C_SDA  │
+│ 11  │ 3V3_S    │
+│ 14  │ 3V3_S    │
+│ 17  │ I2C_SDA  │
+│ 18  │ I2C_SCL  │
+│ 23  │ GND      │
 └─────┴──────────┘
-```
-
-Alternatively you can provide the module you want to get the info from as an extra argument:
-
-```
-python3 wismap.py info rak12008
+Notes:
+- I2C address can be changed changing the resistor at R7
+- Image: https://images.docs.rakwireless.com/wisblock/rak12008/rak12008.png
+- Schematic: https://images.docs.rakwireless.com/wisblock/rak12008/datasheet/rak12008-schematic.png
 ```
 
 ### Combine

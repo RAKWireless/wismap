@@ -1,5 +1,5 @@
-# Import artifacts
-WisBlock-IO-Pin-Mapper.xlsx
+# Upstream checkout materialized by CI / a local `make sync-data` clone
+.upstream
 
 # Python
 *.pyc

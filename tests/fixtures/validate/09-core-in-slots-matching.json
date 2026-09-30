@@ -398,7 +398,7 @@
       ],
       "UART1_RX": [
         "UART1_RX",
-        "",
+        "RXD1",
         "P0.15",
         "",
         "",
@@ -408,7 +408,7 @@
       ],
       "UART1_TX": [
         "UART1_TX",
-        "",
+        "TXD1",
         "P0.16",
         "",
         "",
@@ -480,12 +480,12 @@
     "columns": [
       "Function",
       "Base board",
-      "Core module",
-      "IO_A slot",
-      "SENSOR_A slot",
-      "SENSOR_B slot",
-      "SENSOR_C slot",
-      "SENSOR_D slot"
+      "Core Slot",
+      "IO Slot A",
+      "Sensor Slot A",
+      "Sensor Slot B",
+      "Sensor Slot C",
+      "Sensor Slot D"
     ],
     "slot_module": {
       "BASE": "RAK19007",

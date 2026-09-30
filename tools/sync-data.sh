@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+#
+# Vendor the module catalog from wisblock-data.
+#
+# data/{definitions,config,rules}.yml are byte-for-byte copies of that
+# repository's dist/wismap/ artifacts. They are committed here because
+# docker-compose mounts ./data read-only, so the files must exist on the host
+# before the container starts — but they are never authored here.
+#
+# The upstream tree is resolved in two ways so the same script serves a
+# maintainer with a sibling checkout and a CI runner with neither:
+#
+#   WISBLOCK_DATA       a checkout to copy from (default ../../wisblock-data)
+#   WISBLOCK_DATA_REPO  git URL, cloned to a temp dir when the path above has
+#                       no dist/wismap; defaults to the upstream repository, so
+#                       a machine that has never checked it out still syncs
+#   WISBLOCK_DATA_REF   ref to clone (default master)
+#
+# Usage:
+#   tools/sync-data.sh            copy the artifacts in, report what moved
+#   tools/sync-data.sh --check    compare only; non-zero if anything differs
+
+set -euo pipefail
+
+FILES=(definitions.yml config.yml rules.yml)
+
+WISBLOCK_DATA=${WISBLOCK_DATA:-../../wisblock-data}
+WISBLOCK_DATA_REPO=${WISBLOCK_DATA_REPO:-https://github.com/RAKWireless/wisblock-data.git}
+WISBLOCK_DATA_REF=${WISBLOCK_DATA_REF:-master}
+
+check_only=false
+case "${1:-}" in
+    --check) check_only=true ;;
+    "")      ;;
+    *)       echo "usage: $0 [--check]" >&2; exit 2 ;;
+esac
+
+cd "$(dirname "$0")/.."
+
+clone_dir=""
+cleanup() { [ -n "$clone_dir" ] && rm -rf "$clone_dir"; return 0; }
+trap cleanup EXIT
+
+if [ -d "$WISBLOCK_DATA/dist/wismap" ]; then
+    src_root=$WISBLOCK_DATA
+    origin="$WISBLOCK_DATA"
+elif [ -n "$WISBLOCK_DATA_REPO" ]; then
+    # A blobless shallow clone: dist/ is a handful of files, and the rest of
+    # the upstream history is of no interest to a sync.
+    clone_dir=$(mktemp -d)
+    echo "Cloning $WISBLOCK_DATA_REPO@$WISBLOCK_DATA_REF"
+    git clone --quiet --depth 1 --branch "$WISBLOCK_DATA_REF" \
+        --filter=blob:none "$WISBLOCK_DATA_REPO" "$clone_dir"
+    src_root=$clone_dir
+    origin="$WISBLOCK_DATA_REPO@$WISBLOCK_DATA_REF"
+else
+    cat >&2 <<EOF
+ERROR: no wisblock-data source.
+
+  Point WISBLOCK_DATA at a checkout (currently '$WISBLOCK_DATA', which has no
+  dist/wismap), or set WISBLOCK_DATA_REPO to a git URL to clone from.
+EOF
+    exit 1
+fi
+
+src=$src_root/dist/wismap
+for f in "${FILES[@]}"; do
+    [ -f "$src/$f" ] || { echo "ERROR: $src/$f is missing — is '$origin' really a wisblock-data tree?" >&2; exit 1; }
+done
+
+if $check_only; then
+    drift=0
+    for f in "${FILES[@]}"; do
+        if ! cmp -s "$src/$f" "data/$f"; then
+            echo "DRIFT: data/$f differs from $origin"
+            drift=1
+        fi
+    done
+    if [ "$drift" -ne 0 ]; then
+        echo "Run 'make sync-data' and commit the result." >&2
+        exit 1
+    fi
+    echo "data/ matches $origin"
+    exit 0
+fi
+
+changed=()
+for f in "${FILES[@]}"; do
+    cmp -s "$src/$f" "data/$f" || changed+=("$f")
+    cp "$src/$f" "data/$f"
+done
+
+# Which upstream commit produced what is now in data/. Without this the
+# vendored files are anonymous: there is no way to tell from this repository
+# alone which version of the catalog it is carrying, which makes an automated
+# sync unauditable and a bug report impossible to place.
+#
+# Only rewritten when an artifact actually moved, so it records the commit that
+# produced these bytes rather than the last time anyone ran a sync. A scheduled
+# job that finds nothing new therefore leaves the tree untouched, instead of
+# proposing a commit whose entire content is a new timestamp.
+# The canonical upstream, not whatever the sibling checkout's `origin` happens
+# to say. A local remote goes stale the moment the repository is transferred or
+# renamed, and this value gets committed — recording an owner that no longer
+# owns it is worse than ignoring a fork. Sync from a fork by naming it in
+# WISBLOCK_DATA_REPO.
+repo=$WISBLOCK_DATA_REPO
+commit=$(git -C "$src_root" rev-parse HEAD 2>/dev/null || echo unknown)
+committed=$(git -C "$src_root" log -1 --format=%cI 2>/dev/null || echo unknown)
+subject=$(git -C "$src_root" log -1 --format=%s 2>/dev/null || echo unknown)
+
+# Nothing moved and the stamp already names this same source: leave the tree
+# alone. Where the data came *from* is still worth re-recording even when the
+# bytes are identical — a repository that moves to another owner would
+# otherwise keep a stale URL here until some unrelated data change happened to
+# refresh it.
+if [ ${#changed[@]} -eq 0 ] && [ -f data/UPSTREAM ] &&
+   grep -qxF "repo: $repo" data/UPSTREAM && grep -qxF "ref: $WISBLOCK_DATA_REF" data/UPSTREAM; then
+    echo "data/ already up to date with $origin ($commit)"
+    exit 0
+fi
+
+cat > data/UPSTREAM <<EOF
+# Provenance of data/{definitions,config,rules}.yml — written by tools/sync-data.sh.
+# These files are generated by wisblock-data and copied here verbatim; fix a
+# value there, not here.
+repo: $repo
+ref: $WISBLOCK_DATA_REF
+commit: $commit
+committed: $committed
+subject: $subject
+EOF
+
+if [ ${#changed[@]} -eq 0 ]; then
+    echo "data/ already up to date with $origin ($commit); recorded provenance"
+else
+    echo "Synced from $origin ($commit):"
+    printf '  %s\n' "${changed[@]}"
+    echo "Re-run 'make check-fixtures' so the consumer fixtures follow the catalog."
+fi
