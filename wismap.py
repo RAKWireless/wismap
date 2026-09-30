@@ -111,6 +111,8 @@ def action_info(*args):
     print(f"Module: {module.upper()}")
     print(f"Type: {info['type']}")
     print(f"Description: {info['description']}")
+    if info.get('chip'):
+        print(f"Chip: {info['chip']}")
     print(f"Documentation: {info['documentation']}")
 
     if info['type'] == 'WisSensor':

@@ -199,6 +199,7 @@ def get_module_info(definitions, config, module_id, show_nc=False):
         'id': module_id,
         'type': mod['type'],
         'description': mod['description'],
+        'chip': mod.get('chip'),
         'documentation': mod.get('documentation', ''),
         'images': mod.get('images') or [],
         'schematics': mod.get('schematics') or [],
