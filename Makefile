@@ -19,10 +19,12 @@ ifndef VERBOSE
 .SILENT:
 endif
 
+# The virtualenv check is a shell test inside the recipe, not a make
+# conditional. A conditional is evaluated while the Makefile is being read, so
+# it aborted every target — including the ones that never touch .venv — on any
+# machine without virtualenv on PATH, which is every CI runner.
 .venv/touchfile: requirements.txt
- 	ifeq (, $(shell which virtualenv))
- 		$(error "Could not find virtualenv, consider doing `pip install virtualenv`")
- 	endif
+	command -v virtualenv >/dev/null || { echo 'Could not find virtualenv, consider doing `pip install virtualenv`' >&2 ; exit 1 ; }
 	test -d .venv || virtualenv .venv
 	. .venv/bin/activate ; pip install -Ur requirements.txt
 	touch .venv/touchfile
